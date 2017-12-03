@@ -1,13 +1,13 @@
 package de.cvguy.kotlin.koreander
 
 import de.cvguy.kotlin.koreander.exception.InvalidTypeException
-import de.cvguy.kotlin.koreander.exception.TemplateNotFoundException
 import de.cvguy.kotlin.koreander.parser.KoreanderParser
 import de.cvguy.kotlin.koreander.util.getKType
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
 import org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmScriptEngineBase.CompiledKotlinScript
 import java.io.InputStream
+import java.net.URL
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import kotlin.reflect.KType
@@ -21,14 +21,14 @@ class Koreander {
     }
 
     inline fun <reified T : Any>render(inputStream: InputStream, context: T, charset: Charset = StandardCharsets.UTF_8): String {
-        return renderString(inputStream.readTextAndClose(charset), context)
+        return render(inputStream.readTextAndClose(charset), context)
     }
 
-    inline fun <reified T : Any>render(resourceLocation: String, context: T, charset: Charset = StandardCharsets.UTF_8): String {
-        return renderString(resourceLocation.readResourceText(charset), context)
+    inline fun <reified T : Any>render(url: URL, context: T, charset: Charset = StandardCharsets.UTF_8): String {
+        return render(url.readText(charset), context)
     }
 
-    inline fun <reified T : Any>renderString(string: String, context: T): String {
+    inline fun <reified T : Any>render(string: String, context: T): String {
         return unsafeRender(compile(string, typeOf(context)), context)
     }
 
@@ -48,10 +48,16 @@ class Koreander {
         return kotlinScript.eval().toString()
     }
 
+    fun compile(inputStream: InputStream, type: KType, charset: Charset = StandardCharsets.UTF_8): CompiledTemplate {
+        return compile(inputStream.readTextAndClose(charset), type)
+    }
+
+    fun compile(url: URL, type: KType, charset: Charset = StandardCharsets.UTF_8): CompiledTemplate {
+        return compile(url.readText(charset), type)
+    }
+
     fun compile(input: String, type: KType): CompiledTemplate {
         val kotlinScriptCode = parser.generateScriptCode(input, type.toString())
-
-        println(kotlinScriptCode)
 
         val kotlinScript = engine.compile(kotlinScriptCode) as CompiledKotlinScript
 
@@ -62,13 +68,8 @@ class Koreander {
         return this.bufferedReader(charset).use { it.readText() }
     }
 
-    fun String.readResourceText(charset: Charset = Charsets.UTF_8):String {
-        val resource = javaClass.getResource(this) ?: throw TemplateNotFoundException(this)
-        return resource.readText(charset)
-    }
-
     companion object {
-        inline fun <reified T : Any>typeOf(instance: T) = getKType<T>()
+        inline fun <reified T : Any>typeOf(@SuppressWarnings("unused") instance: T) = getKType<T>()
     }
 }
 
