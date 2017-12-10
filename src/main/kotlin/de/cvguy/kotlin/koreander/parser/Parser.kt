@@ -146,7 +146,7 @@ class KoreanderParseEngine(
         val name = if(elementExpression == null) "div" else expressionCode(elementExpression, true)
         val id = if(elementIdExpression == null) "" else appendAttributeString("id", elementIdExpression)
         val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
-        val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString()
+        val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
         koreanderPrint("<$name$id$classes$attribute>")
 

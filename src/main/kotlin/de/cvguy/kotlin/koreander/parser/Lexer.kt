@@ -222,7 +222,7 @@ class Lexer {
 
             if(count != 0) return false
 
-            unshiftToken(BRACKET_EXPRESSION, count)
+            unshiftToken(BRACKET_EXPRESSION, pos + 1)
 
             return true
         }

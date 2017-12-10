@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
             "            = xxx\n" +
             "            = hum\n" +
             "        .test\n" +
-            "        #onlyid aaa=\"bbb\"\n" +
+            "        #onlyid aaa={xxx} bbb=\"ccc\"\n" +
             "         #id.andclas", Hum<Int>("eejjj", 346346))
 
     println(output)
