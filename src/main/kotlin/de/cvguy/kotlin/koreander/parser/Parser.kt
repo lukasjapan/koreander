@@ -1,16 +1,10 @@
 package de.cvguy.kotlin.koreander.parser
 
-import de.cvguy.kotlin.koreander.exception.ParseError
-import de.cvguy.kotlin.koreander.parser.token.Token
-import de.cvguy.kotlin.koreander.parser.token.Code
-import de.cvguy.kotlin.koreander.parser.token.Comment
-import de.cvguy.kotlin.koreander.parser.token.DocType
-import de.cvguy.kotlin.koreander.parser.token.Element
-import de.cvguy.kotlin.koreander.parser.token.ElementId
-import de.cvguy.kotlin.koreander.parser.token.ElementClass
-import de.cvguy.kotlin.koreander.parser.token.SilentCode
-import de.cvguy.kotlin.koreander.parser.token.Text
-import de.cvguy.kotlin.koreander.parser.token.WhiteSpace
+import de.cvguy.kotlin.koreander.exception.ExpectedOther
+import de.cvguy.kotlin.koreander.exception.UnexpectedDocType
+import de.cvguy.kotlin.koreander.exception.UnexpectedEndOfInput
+import de.cvguy.kotlin.koreander.exception.UnexpextedToken
+import de.cvguy.kotlin.koreander.parser.Token.Type.*
 
 import java.util.Stack
 
@@ -18,7 +12,7 @@ class KoreanderParser(
         private val lexer: Lexer = Lexer()
 ) {
     fun generateScriptCode(input: String, contextClass: String): String {
-        return KoreanderParseEngine(lexer.lexString(input), contextClass).output
+        return KoreanderParseEngine(lexer.lexString(input), contextClass).parse()
     }
 }
 
@@ -31,61 +25,49 @@ class KoreanderParseEngine(
     private val outputVarName = "_koreanderTemplateOutput"
     private val iterator = tokens.listIterator()
     private val openTags = Stack<OpenTag>()
+    private val lines = mutableListOf<String>()
 
-    val output: String = run {
-        val lines = mutableListOf<String>()
+    fun parse(): String {
+        lines.clear()
 
         lines.add("val $outputVarName = mutableListOf<String>()")
         lines.add("(bindings[\"context\"] as $contextClass).apply({")
 
-        for (token in iterator) {
-            val outputLines = when (token) {
-                is Code -> process(token)
-                is Comment -> process(token)
-                is DocType -> process(token)
-                is Element -> process(token)
-                is ElementId -> process(token)
-                is ElementClass -> process(token)
-                is SilentCode -> process(token)
-                is Text -> process(token)
-                is WhiteSpace -> process(token)
-                else -> throw AssertionError("This should never happen.")
-            }
+        unshiftDocType()
 
-            lines.addAll(outputLines)
+        // one loop execution processes one line of the template
+        while(iterator.hasNext()) {
+            val index = iterator.nextIndex()
+
+            // optional whitespace
+            unshiftWhiteSpace()
+
+            unshiftTag()
+
+            unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
+
+            // nothing has been processed
+            if(index == iterator.nextIndex()) {
+                throw UnexpextedToken(iterator.next())
+            }
         }
-        lines.addAll(closeOpenTags(0))
+
+        closeOpenTags(0)
 
         lines.add("})")
-        lines.add("$outputVarName.joinToString(\"\\n\")")
+        lines.add("""$outputVarName.joinToString("\n")""")
 
-        lines.joinToString("\n")
+        println(lines.joinToString("\n"))
+
+        return lines.joinToString("\n")
     }
 
-    private fun process(token: Code): List<String> {
-        // check for valid code here
+    private fun unshiftDocType(): Boolean {
+        iterator.nextIfType(DOC_TYPE_IDENTIFIER) ?: return false
+        val typeToken = iterator.nextIfType(DOC_TYPE)
 
-        val isBlock = iterator.peek().takeIf { it is WhiteSpace && it.count > currentDepth } != null
-
-        val line = if (isBlock) {
-            openTags.push(OpenTag(currentDepth, "}).toString())", true))
-            "$outputVarName.add(\"$currentWhitespace\" + (${token.code} {"
-        } else {
-            "$outputVarName.add(\"$currentWhitespace\" + (${token.code}).toString())"
-        }
-
-        return listOf(line)
-    }
-
-    private fun process(token: Comment): List<String> {
-        return listOf(outputAdd("<!-- ${token.content} -->"))
-    }
-
-    private fun process(token: DocType): List<String> {
-        val xmlLine = token.encoding?.let { "<?xml version='1.0' encoding='$it' ?>" }
-
-        val docTypeLine = when (token.type) {
-            "" -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+        val docTypeLine = when (typeToken?.content) {
+            null -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
             "Strict" -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
             "Frameset" -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">"
             "5" -> "<!DOCTYPE html>"
@@ -93,85 +75,170 @@ class KoreanderParseEngine(
             "Basic" -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML Basic 1.1//EN\" \"http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd\">"
             "Mobile" -> "<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.2//EN\" \"http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd\">"
             "RDFa" -> "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML+RDFa 1.0//EN\" \"http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd\">"
-            else -> throw ParseError("", token.line, token.character, "Invalid doctype: ${token.type}")
+            else -> throw UnexpectedDocType(typeToken)
         }
 
-        return listOf(xmlLine, docTypeLine).filterNotNull().map(this::outputAdd)
+        koreanderPrint(docTypeLine)
+
+        return true
     }
 
-    private fun process(token: Element): List<String> {
-        val id = iterator.peek().takeIf { it is ElementId }?.also { iterator.next() } as? ElementId
-        val classes = iterator.peek().takeIf { it is ElementClass }?.also { iterator.next() } as? ElementClass
-        return processElement(token, id, classes)
+    private fun unshiftWhiteSpace(): Boolean {
+        val token = iterator.nextIfType(WHITE_SPACE) ?: return false
+
+        val len = token.content.length
+
+        closeOpenTags(len)
+
+        openTags.push(OpenTag(len, "", true))
+
+        return true
     }
 
-    private fun process(token: ElementId): List<String> {
-        val classes = iterator.peek().takeIf { it is ElementClass }?.also { iterator.next() } as? ElementClass
-        return processElement(null, token, classes)
-    }
-
-    private fun process(token: ElementClass): List<String> {
-        return processElement(null, null, token)
-    }
-
-    private fun processElement(element: Element?, id: ElementId?, classes: ElementClass?): List<String> {
-        val tag = element?.tag ?: "div"
-        val idString = id?.let { " id=\"${it.id}\"" } ?: ""
-        val classesString = classes?.let { " class=\"${it.name}\"" } ?: ""
-
-        val line = "<$tag$idString$classesString>"
-
-        openTags.push(OpenTag(currentDepth, "</$tag>", false))
-
-        return listOf(outputAdd(line))
-    }
-
-    private fun process(token: SilentCode): List<String> {
-        // check for valid code here
-
-        val isBlock = iterator.peek()?.takeIf { it is WhiteSpace && it.count > currentDepth } != null
-
-        val line = if (isBlock) {
-            openTags.push(OpenTag(currentDepth, "}", true))
-            "${token.code}{"
-        } else {
-            token.code
-        }
-
-        return listOf(line)
-    }
-
-    private fun process(token: Text): List<String> {
-        return listOf(outputAdd(token.content))
-    }
-
-    private fun process(token: WhiteSpace): List<String> {
-        return closeOpenTags(token.count).also {
-            openTags.push(OpenTag(token.count, "", true))
-        }
-    }
-
-    private fun closeOpenTags(downTo: Int): List<String> {
-        val result = mutableListOf<String>()
-
+    private fun closeOpenTags(downTo: Int) {
         while (openTags.isNotEmpty() && currentDepth >= downTo) {
             val tag = openTags.pop()
             if (tag.code) {
                 if (tag.closeBy.isNotBlank()) {
-                    result.add(tag.closeBy)
+                    lines.add(tag.closeBy)
                 }
             } else {
-                result.add(outputAdd(tag.closeBy))
+                koreanderPrint(tag.closeBy)
             }
         }
+    }
+
+    private fun unshiftComment(): Boolean {
+        val token = iterator.nextIfType(COMMENT) ?: return false
+        koreanderPrint("<!-- ${token.content} -->")
+        return true
+    }
+
+    private fun unshiftText(): Boolean {
+        val token = iterator.nextIfType(TEXT) ?: return false
+        koreanderPrint(token.content)
+        return true
+    }
+
+    private fun unshiftTag(): Boolean {
+        val elementToken = iterator.nextIfType(ELEMENT_IDENTIFIER)
+        val elementExpression = elementToken?.let { iterator.nextForceType(BRACKET_EXPRESSION, STRING) }
+
+        val elementIdToken = iterator.nextIfType(ELEMENT_ID_IDENTIFIER)
+        val elementIdExpression = elementIdToken?.let { iterator.nextForceType(BRACKET_EXPRESSION, STRING) }
+
+        val elementClassToken = iterator.nextIfType(ELEMENT_CLASS_IDENTIFIER)
+        val elementClassExpression = elementClassToken?.let { iterator.nextForceType(BRACKET_EXPRESSION, STRING) }
+
+        // must have at least one defined
+        elementToken ?: elementIdToken ?: elementClassToken ?: return false
+
+        val attributes = mutableListOf<Pair<Token, Token>>()
+
+        while(true) {
+            val name = iterator.nextIfType(BRACKET_EXPRESSION, STRING) ?: break
+            iterator.nextForceType(ATTRIBUTE_CONNECTOR)
+            val value = iterator.nextForceType(BRACKET_EXPRESSION, QUOTED_STRING)
+
+            attributes.add(Pair(name, value))
+        }
+
+        val name = if(elementExpression == null) "div" else expressionCode(elementExpression, true)
+        val id = if(elementIdExpression == null) "" else appendAttributeString("id", elementIdExpression)
+        val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
+        val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString()
+
+        koreanderPrint("<$name$id$classes$attribute>")
+
+        openTags.push(OpenTag(currentDepth, "</$name>", false))
+
+        return true
+    }
+
+    private fun appendAttributeString(name: String, value: Token): String {
+        val valueExpression = expressionCode(value, true)
+        return """ $name="$valueExpression""""
+    }
+
+    private fun appendAttributeCode(name: Token, value: Token): String {
+        val nameExpression = expressionCode(name, true)
+        val valueExpression = expressionCode(value, true)
+        return """ $nameExpression="$valueExpression""""
+    }
+
+    private fun expressionCode(token: Token, inString: Boolean) = when(token.type) {
+        EXPRESSION -> """(${token.content}).toString()""".let { if(inString) inStringExpression(it) else it }
+        BRACKET_EXPRESSION -> """(${token.content.substring(1, token.content.length - 1)}).toString()""".let { if(inString) inStringExpression(it) else it }
+        QUOTED_STRING -> if(inString) token.content.substring(1, token.content.length - 1) else token.content
+        STRING, TEXT -> if(inString) token.content else """"${token.content}""""
+        else -> throw ExpectedOther(token, setOf(BRACKET_EXPRESSION, QUOTED_STRING, EXPRESSION, STRING))
+    }
+
+    private fun unshiftCode(): Boolean {
+        iterator.nextIfType(CODE_IDENTIFIER) ?: return false
+        val code = iterator.nextForceType(EXPRESSION)
+
+        if (iterator.nextIsDeeperWhitespace()) {
+            openTags.push(OpenTag(currentDepth, "}).toString())", true))
+            lines.add("$outputVarName.add(\"$currentWhitespace\" + (${code.content} {")
+        } else {
+            koreanderPrint(expressionCode(code, true))
+        }
+
+        return true
+    }
+
+    private fun unshiftSilentCode(): Boolean {
+        iterator.nextIfType(SILENT_CODE_IDENTIFIER) ?: return false
+        val code = iterator.nextForceType(EXPRESSION)
+
+        if (iterator.nextIsDeeperWhitespace()) {
+            openTags.push(OpenTag(currentDepth, "}", true))
+            lines.add("${code.content} {\"")
+        } else {
+            lines.add(expressionCode(code, true))
+        }
+
+        return true
+    }
+
+    private fun ListIterator<Token>.peek(): Token? {
+        if(!hasNext()) return null
+
+        val result = next()
+
+        previous()
 
         return result
     }
 
-    private fun ListIterator<Token>.peek(): Token? = if (hasNext()) { next().also { previous() } } else null
+    private fun ListIterator<Token>.nextIsDeeperWhitespace(): Boolean {
+        val token = peek() ?: return false
+        return token.type == WHITE_SPACE && token.content.length > currentDepth
+    }
+
+    private fun ListIterator<Token>.nextIfType(vararg type: Token.Type): Token? {
+        val token = peek() ?: return null
+
+        if(type.contains(token.type)) {
+            return next()
+        }
+
+        return null
+    }
+
+    private fun ListIterator<Token>.nextForceType(vararg type: Token.Type): Token {
+        return nextIfType(*type) ?: throw ExpectedOther(peek() ?: throw UnexpectedEndOfInput(), type.toSet())
+    }
 
     private val currentDepth get() = openTags.lastOrNull()?.depth ?: 0
     private val currentWhitespace get() = " ".repeat(currentDepth)
 
-    private fun outputAdd(input: String) = "$outputVarName.add(\"$currentWhitespace${input.replace("\"", "\\\"")}\")"
+    private fun koreanderPrint(input: String) {
+        lines.add("$outputVarName.add(\"\"\"$currentWhitespace$input\"\"\")")
+    }
+
+    private fun inStringExpression(expression: String): String {
+        return """${'$'}{$expression}"""
+    }
 }
