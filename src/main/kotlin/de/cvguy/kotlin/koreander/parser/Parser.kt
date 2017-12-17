@@ -138,7 +138,7 @@ class KoreanderParseEngine(
         while(true) {
             val name = iterator.nextIfType(BRACKET_EXPRESSION, STRING) ?: break
             iterator.nextForceType(ATTRIBUTE_CONNECTOR)
-            val value = iterator.nextForceType(BRACKET_EXPRESSION, QUOTED_STRING)
+            val value = iterator.nextForceType(BRACKET_EXPRESSION, QUOTED_STRING, STRING)
 
             attributes.add(Pair(name, value))
         }
@@ -148,9 +148,13 @@ class KoreanderParseEngine(
         val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
-        koreanderPrint("<$name$id$classes$attribute>")
-
-        openTags.push(OpenTag(currentDepth, "</$name>", false))
+        if(iterator.peek()?.let{ it.type == WHITE_SPACE && it.content.length <= currentDepth} ?: true) {
+            koreanderPrint("<$name$id$classes$attribute></$name>")
+        }
+        else {
+            koreanderPrint("<$name$id$classes$attribute>")
+            openTags.push(OpenTag(currentDepth, "</$name>", false))
+        }
 
         return true
     }

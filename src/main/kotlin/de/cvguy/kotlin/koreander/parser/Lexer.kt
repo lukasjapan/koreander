@@ -86,7 +86,7 @@ class Lexer {
                 tryLexing {
                     val hasNameExpression = unshiftBracketExpression() || unshiftSimpleString()
                     val hasConnector = unshiftIdentifier('=', ATTRIBUTE_CONNECTOR)
-                    val hasValueExpression = unshiftBracketExpression() || unshiftQuotedString()
+                    val hasValueExpression = unshiftBracketExpression() || unshiftQuotedString() || unshiftSimpleString()
                     hasNameExpression && hasConnector && hasValueExpression
                 } || break
             }
@@ -189,7 +189,7 @@ class Lexer {
         }
 
         private fun unshiftQuotedString(): Boolean {
-            val match = Regex("\"(\\.|[^\"])*\"").find(remainingInput) ?: return false
+            val match = Regex("^\"(\\.|[^\"])*\"").find(remainingInput) ?: return false
 
             unshiftToken(QUOTED_STRING, match.value.length)
 
@@ -197,7 +197,7 @@ class Lexer {
         }
 
         private fun unshiftSimpleString(): Boolean {
-            val match = Regex("^[a-zA-Z0-9_\\-]+").find(remainingInput) ?: return false
+            val match = Regex("^[^ \"={}]+").find(remainingInput) ?: return false
 
             unshiftToken(STRING, match.value.length)
 
