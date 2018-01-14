@@ -1,11 +1,44 @@
 [![Build Status](https://travis-ci.org/lukasjapan/koreander.svg?branch=master)](https://travis-ci.org/lukasjapan/koreander)
+[![Coverage Status](https://coveralls.io/repos/github/lukasjapan/koreander/badge.svg?branch=master)](https://coveralls.io/github/lukasjapan/koreander?branch=master)
 
 # Koreander
 
 Koreander is a template engine that produces HTML code from a clean elegant whitespace driven syntax.
 Koreander templates can embed Kotlin code with all its perks.
 
-#### Example:
+```
+%html
+    %body
+        .content Welcome to ${Koreander}!
+```
+
+```
+<html>
+    <body>
+        <div class="content">
+            Welcome to Koreander!
+        </div>
+    </body>
+</html>
+```
+
+## Introduction
+
+TBA What is Koreander?
+
+### Installation
+
+TBA
+
+#### Gradle
+
+TBA
+
+#### Other?
+
+TBA?
+
+### Example:
 
 resources/input.kor
 
@@ -55,22 +88,6 @@ fun main(args: Array<String>) {
     </body>
 </html>
 ```
-
-## Introduction
-
-TBA What is Koreander?
-
-### Installation
-
-TBA
-
-#### Gradle
-
-TBA
-
-#### Other?
-
-TBA?
 
 ## Usage
 

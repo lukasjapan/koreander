@@ -10,6 +10,7 @@ buildscript {
 }
 
 plugins {
+    id 'com.github.kt3k.coveralls' version "2.8.2"
     id "io.gitlab.arturbosch.detekt" version "1.0.0.RC6"
 }
 
@@ -33,6 +34,17 @@ detekt {
         config = "$projectDir/detekt.yml"
         filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
     }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
+coveralls {
+    sourceDirs += ['src/main/kotlin']
 }
 
 dependencies {
