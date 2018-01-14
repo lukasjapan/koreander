@@ -3,7 +3,7 @@
 Koreander is a template engine that produces HTML code from a clean elegant whitespace driven syntax.
 Koreander templates can embed Kotlin code with all its perks.
 
-##### Example:
+#### Example:
 
 resources/input.kor
 
