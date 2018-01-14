@@ -1,0 +1,7 @@
+%html
+    %head
+        %meta name="generator" content={generator.toUpperCase()}
+    %body
+        %h1 Welcome to Koreander
+        .content
+            Hello ${name}!
