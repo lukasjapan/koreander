@@ -3,13 +3,13 @@
 
 # Koreander
 
-Koreander is a template engine that produces HTML code from a clean elegant whitespace driven syntax.
-Koreander templates can embed Kotlin code with all its perks.
+Koreander is a template engine for Kotlin that builds HTML code from a clean elegant syntax.
+The view model is accessed by Kotlin Code which makes Koreander templates very vertasile yet being type-safe.
 
 ```
 %html
     %body
-        .content Welcome to ${Koreander}!
+        .content Welcome to ${"koreander".capitalized()}!
 ```
 
 ```
@@ -24,54 +24,70 @@ Koreander templates can embed Kotlin code with all its perks.
 
 ## Introduction
 
-TBA What is Koreander?
+Koreander is a template engine for Kotlin.
+It features an ident based syntax similar to [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
+However, Koreander is completely Kotlin flavored!
+
+Koreander templates have
+
+- type-safety!!
+- excellent performance due to JVM compilation
+- an amazing syntax for logic thanks to Kotlin
+- so much more
 
 ### Installation
 
-TBA
+Using Koreander is as simple as adding a line to your package tool.
+For Spring integration see [below](xxx).
 
 #### Gradle
 
-TBA
+TBA - need to upload the package via CI
 
-#### Other?
+#### Maven
 
-TBA?
+TBA - need to upload the package via CI
 
-### Example:
+#### JAR
 
-resources/input.kor
+TBA - direct link to JAR?
+
+### Quick Example
+
+A template saved as `input.kor`:
 
 ```
 %html
     %head
-        %meta name="generator" content={generator.toUpperCase()}
+        %meta name="generator" content={generatorName.toUpperCase()}
     %body
         %h1 Welcome to Koreander
         .content
             Hello ${name}!
 ```
 
-main/example.kt
+View model `TemplateContext` and main code:
 
 ```kotlin
 data class TemplateContext(
     val name: String,
-    val generator: String
+    val generatorName: String
 )
 
 fun main(args: Array<String>) {
     val koreander = Koreander()
 
-    val input = Koreander::class.java.getResource("/input.kor").readText()
+    val input = File("input.kor").readText()
 
-    val output = koreander.render(input, TemplateContext("World", "Koreander"))
+    val viewModel = TemplateContext("World", "Koreander")
+
+    val output = koreander.render(input, viewModel)
 
     println(output)
 }
 ```
 
-->
+Generated HTML:
 
 ```html
 <html>
@@ -79,15 +95,15 @@ fun main(args: Array<String>) {
         <meta name="generator" content="KOREANDER"></meta>
     </head>
     <body>
-        <h1>
-        Welcome to Koreander
-        </h1>
+        <h1>Welcome to Koreander</h1>
         <div class="content">
             Hello World!
         </div>
     </body>
 </html>
 ```
+
+The template code is evaluated in the context of the view model instance!
 
 ## Usage
 
