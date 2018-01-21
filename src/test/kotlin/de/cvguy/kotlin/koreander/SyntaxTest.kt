@@ -3,34 +3,14 @@ package de.cvguy.kotlin.koreander
 import org.junit.Test
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized
-import javax.xml.transform.TransformerFactory
-import javax.xml.transform.stream.StreamResult
-import javax.xml.transform.stream.StreamSource
-import java.io.StringWriter
-import java.io.StringReader
-import java.net.URL
-import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
 import org.junit.Assert.assertEquals
-import org.xml.sax.InputSource
-import java.io.BufferedReader
 import java.io.File
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.ArrayList
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.transform.Transformer
-import javax.xml.transform.dom.DOMSource
-
-
-
-
-
-
 
 
 @RunWith(Parameterized::class)
-class SyntaxTest(val input: Path, val output: Path) {
+class SyntaxTest(val input: Path, val output: Path, val testName: String) {
     val koreander = Koreander()
     val context = TestContext()
 
@@ -40,11 +20,11 @@ class SyntaxTest(val input: Path, val output: Path) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Array<Path>> {
+        @Parameterized.Parameters(name="{2}")
+        fun data(): Collection<Array<Any>> {
             val url = SyntaxTest::class.java.getResource("/syntax")
             val path = Paths.get(url.toURI())
-            val fileSets = mutableListOf<Array<Path>>()
+            val fileSets = mutableListOf<Array<Any>>()
 
             // find all .kor files for testing
             Files.walkFileTree(path, object : SimpleFileVisitor<Path>() {
@@ -52,7 +32,13 @@ class SyntaxTest(val input: Path, val output: Path) {
                     if(file.toString().endsWith(".kor")) {
                         val filename = file.toString().dropLast(4) + ".html"
                         val expected = Paths.get(filename)
-                        fileSets.add(arrayOf(file, expected))
+                        val testName = file
+                                .toString()
+                                .dropLast(4)
+                                .split(File.separator)
+                                .takeLast(2)
+                                .joinToString(File.separator)
+                        fileSets.add(arrayOf(file, expected, testName))
                     }
                     return FileVisitResult.CONTINUE
                 }
