@@ -15,7 +15,8 @@ class SyntaxTest(val input: Path, val output: Path, val testName: String) {
     val context = TestContext()
 
     data class TestContext(
-            val string: String = "This is a string."
+            val string: String = "This is a string.",
+            val list: List<Int> = listOf(5, 7, 9)
     )
 
     companion object {

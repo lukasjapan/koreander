@@ -1,0 +1,5 @@
+%html
+    %body
+        %p
+            - val a = 1 + 2
+            = a

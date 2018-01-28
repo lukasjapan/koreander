@@ -1,0 +1,6 @@
+%html
+    %body
+        %ul
+            - list.forEach
+                %li
+                    = it
