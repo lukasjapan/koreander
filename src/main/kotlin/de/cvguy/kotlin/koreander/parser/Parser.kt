@@ -31,6 +31,7 @@ class KoreanderParseEngine(
         lines.clear()
 
         lines.add("val $outputVarName = mutableListOf<String>()")
+        lines.add("""fun _htmlEscape(raw: String): String { return raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt") }""")
         lines.add("(bindings[\"context\"] as $contextClass).apply({")
 
         unshiftDocType()
@@ -78,7 +79,7 @@ class KoreanderParseEngine(
             else -> throw UnexpectedDocType(typeToken)
         }
 
-        koreanderPrint(docTypeLine)
+        koreanderPrint(docTypeLine, false)
 
         return true
     }
@@ -103,20 +104,20 @@ class KoreanderParseEngine(
                     lines.add(tag.closeBy)
                 }
             } else {
-                koreanderPrint(tag.closeBy)
+                koreanderPrint(tag.closeBy, false)
             }
         }
     }
 
     private fun unshiftComment(): Boolean {
         val token = iterator.nextIfType(COMMENT) ?: return false
-        koreanderPrint("<!-- ${token.content} -->")
+        koreanderPrint("<!-- ${token.content} -->", false)
         return true
     }
 
     private fun unshiftText(): Boolean {
         val token = iterator.nextIfType(TEXT) ?: return false
-        koreanderPrint(token.content)
+        koreanderPrint(token.content, true)
         return true
     }
 
@@ -149,10 +150,10 @@ class KoreanderParseEngine(
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
         if(iterator.peek()?.let{ it.type == WHITE_SPACE && it.content.length <= currentDepth} ?: true) {
-            koreanderPrint("<$name$id$classes$attribute></$name>")
+            koreanderPrint("<$name$id$classes$attribute></$name>", false)
         }
         else {
-            koreanderPrint("<$name$id$classes$attribute>")
+            koreanderPrint("<$name$id$classes$attribute>", false)
             openTags.push(OpenTag(currentDepth, "</$name>", false))
         }
 
@@ -186,7 +187,7 @@ class KoreanderParseEngine(
             openTags.push(OpenTag(currentDepth, "}).toString())", true))
             lines.add("$outputVarName.add(\"$currentWhitespace\" + (${code.content} {")
         } else {
-            koreanderPrint(expressionCode(code, true))
+            koreanderPrint(expressionCode(code, true), true)
         }
 
         return true
@@ -198,9 +199,9 @@ class KoreanderParseEngine(
 
         if (iterator.nextIsDeeperWhitespace()) {
             openTags.push(OpenTag(currentDepth, "}", true))
-            lines.add("${code.content} {\"")
+            lines.add("${code.content} {")
         } else {
-            lines.add(expressionCode(code, true))
+            lines.add(code.content)
         }
 
         return true
@@ -238,8 +239,13 @@ class KoreanderParseEngine(
     private val currentDepth get() = openTags.lastOrNull()?.depth ?: 0
     private val currentWhitespace get() = " ".repeat(currentDepth)
 
-    private fun koreanderPrint(input: String) {
-        lines.add("$outputVarName.add(\"\"\"$currentWhitespace$input\"\"\")")
+    private fun koreanderPrint(input: String, htmlEscape: Boolean) {
+        val content = if(htmlEscape) {
+            lines.add("$outputVarName.add(_htmlEscape(\"\"\"$currentWhitespace$input\"\"\"))")
+        }
+        else {
+            lines.add("$outputVarName.add(\"\"\"$currentWhitespace$input\"\"\")")
+        }
     }
 
     private fun inStringExpression(expression: String): String {

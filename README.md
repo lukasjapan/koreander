@@ -175,6 +175,7 @@ Korander is released under the [MIT license](http://www.opensource.org/licenses/
 
 ## TODO
 
-- HTML Safety and attribute escaping
+- Attribute escaping
+- Ability to disable html safe
 - Ident on tags with content but without block (%h1 Test -> <h1>Test</h1>)
 - Self closing tags
