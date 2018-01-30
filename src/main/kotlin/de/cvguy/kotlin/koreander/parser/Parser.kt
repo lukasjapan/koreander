@@ -5,8 +5,11 @@ import de.cvguy.kotlin.koreander.exception.UnexpectedDocType
 import de.cvguy.kotlin.koreander.exception.UnexpectedEndOfInput
 import de.cvguy.kotlin.koreander.exception.UnexpextedToken
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
+import org.jetbrains.kotlin.backend.common.pop
 
 import java.util.Stack
+
+val TRIPLE_QUOT = "\"\"\""
 
 class KoreanderParser(
         private val lexer: Lexer = Lexer()
@@ -20,19 +23,42 @@ class KoreanderParseEngine(
         tokens: List<Token>,
         val contextClass: String
 ) {
-    data class OpenTag(val depth: Int, val closeBy: String, val code: Boolean)
+    abstract class TemplateLine(protected val content: String, depth: Int) {
+        var depth: Int = depth
+            private set
 
-    private val outputVarName = "_koreanderTemplateOutput"
+        abstract fun outputExpression(): String
+        open fun templateLine(): String = "_koreanderTemplateOutput.add(${outputExpression()})"
+        fun resetDepth() { depth = 0 }
+    }
+
+    class OutputTemplateLine(content: String, depth: Int) : TemplateLine(content, depth) {
+        override fun outputExpression() = TRIPLE_QUOT + " ".repeat(depth) + content + TRIPLE_QUOT + ".htmlEscape()"
+    }
+
+    class HtmlSafeTemplateLine(content: String, depth: Int) : TemplateLine(content, depth) {
+        override fun outputExpression() = TRIPLE_QUOT + " ".repeat(depth) + content + TRIPLE_QUOT
+    }
+
+    class ControlLine(content: String, depth: Int = 0) : TemplateLine(content, depth) {
+        override fun outputExpression() = throw AssertionError("Control lines do not output anything.")
+        override fun templateLine(): String = content
+    }
+
+    class ExpressionLine(content: String, depth: Int) : TemplateLine(content, depth) {
+        override fun outputExpression(): String = (if(depth > 0) TRIPLE_QUOT + " ".repeat(depth) + TRIPLE_QUOT + " + " else "") + content
+    }
+
     private val iterator = tokens.listIterator()
-    private val openTags = Stack<OpenTag>()
-    private val lines = mutableListOf<String>()
+    private val lines = mutableListOf<TemplateLine>()
+    private val delayedLines = Stack<TemplateLine>()
 
     fun parse(): String {
         lines.clear()
 
-        lines.add("val $outputVarName = mutableListOf<String>()")
-        lines.add("""fun _htmlEscape(raw: String): String { return raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt") }""")
-        lines.add("(bindings[\"context\"] as $contextClass).apply({")
+        lines.add(ControlLine("val _koreanderTemplateOutput = mutableListOf<String>()"))
+        lines.add(ControlLine("""fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt") }"""))
+        lines.add(ControlLine("(bindings[\"context\"] as $contextClass).apply({"))
 
         unshiftDocType()
 
@@ -43,9 +69,15 @@ class KoreanderParseEngine(
             // optional whitespace
             unshiftWhiteSpace()
 
-            unshiftTag()
+            val hadTag = unshiftTag()
 
-            unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
+            val hadOutput = unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
+
+            // can close tag on the same line (a little hacky for now)
+            // maybe lines could have types + running a post processor
+            if(hadTag && hadOutput && iterator.nextIsClosingWhitespace()) {
+                oneLinerTagOutput()
+            }
 
             // nothing has been processed
             if(index == iterator.nextIndex()) {
@@ -55,12 +87,33 @@ class KoreanderParseEngine(
 
         closeOpenTags(0)
 
-        lines.add("})")
-        lines.add("""$outputVarName.joinToString("\n")""")
+        lines.add(ControlLine("})"))
+        lines.add(ControlLine("""_koreanderTemplateOutput.joinToString("\n")"""))
 
-        println(lines.joinToString("\n"))
+        val output = lines.map { it.templateLine() }.filter { it.isNotEmpty() }.joinToString("\n")
 
-        return lines.joinToString("\n")
+        println(output)
+
+        return output
+    }
+
+    private fun oneLinerTagOutput() {
+        val expressionLine = lines.pop()
+        val openingTagLine = lines.pop()
+        val closingTagLine = delayedLines.pop()
+        val depth = openingTagLine.depth
+
+        openingTagLine.resetDepth()
+        expressionLine.resetDepth()
+        closingTagLine.resetDepth()
+
+        val expression = listOf(
+                openingTagLine.outputExpression(),
+                expressionLine.outputExpression(),
+                closingTagLine.outputExpression()
+        ).joinToString(" + ")
+
+        lines.add(ExpressionLine(expression, depth))
     }
 
     private fun unshiftDocType(): Boolean {
@@ -79,7 +132,7 @@ class KoreanderParseEngine(
             else -> throw UnexpectedDocType(typeToken)
         }
 
-        koreanderPrint(docTypeLine, false)
+        lines.add(HtmlSafeTemplateLine(docTypeLine, currentDepth))
 
         return true
     }
@@ -91,33 +144,27 @@ class KoreanderParseEngine(
 
         closeOpenTags(len)
 
-        openTags.push(OpenTag(len, "", true))
+        // remember as current depth
+        delayedLines.push(ControlLine("", len))
 
         return true
     }
 
     private fun closeOpenTags(downTo: Int) {
-        while (openTags.isNotEmpty() && currentDepth >= downTo) {
-            val tag = openTags.pop()
-            if (tag.code) {
-                if (tag.closeBy.isNotBlank()) {
-                    lines.add(tag.closeBy)
-                }
-            } else {
-                koreanderPrint(tag.closeBy, false)
-            }
+        while (delayedLines.isNotEmpty() && currentDepth >= downTo) {
+            lines.add(delayedLines.pop())
         }
     }
 
     private fun unshiftComment(): Boolean {
         val token = iterator.nextIfType(COMMENT) ?: return false
-        koreanderPrint("<!-- ${token.content} -->", false)
+        lines.add(HtmlSafeTemplateLine("<!-- ${token.content} -->", currentDepth))
         return true
     }
 
     private fun unshiftText(): Boolean {
         val token = iterator.nextIfType(TEXT) ?: return false
-        koreanderPrint(token.content, true)
+        lines.add(OutputTemplateLine(token.content, currentDepth))
         return true
     }
 
@@ -149,12 +196,12 @@ class KoreanderParseEngine(
         val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
-        if(iterator.peek()?.let{ it.type == WHITE_SPACE && it.content.length <= currentDepth} ?: true) {
-            koreanderPrint("<$name$id$classes$attribute></$name>", false)
+        if(iterator.nextIsClosingWhitespace()) {
+            lines.add(HtmlSafeTemplateLine("<$name$id$classes$attribute></$name>", currentDepth))
         }
         else {
-            koreanderPrint("<$name$id$classes$attribute>", false)
-            openTags.push(OpenTag(currentDepth, "</$name>", false))
+            lines.add(HtmlSafeTemplateLine("<$name$id$classes$attribute>", currentDepth))
+            delayedLines.push(HtmlSafeTemplateLine("</$name>", currentDepth))
         }
 
         return true
@@ -184,10 +231,10 @@ class KoreanderParseEngine(
         val code = iterator.nextForceType(EXPRESSION)
 
         if (iterator.nextIsDeeperWhitespace()) {
-            openTags.push(OpenTag(currentDepth, "}).toString())", true))
-            lines.add("$outputVarName.add(\"$currentWhitespace\" + (${code.content} {")
+            lines.add(ControlLine("_koreanderTemplateOutput.add(\"$currentWhitespace\" + (${code.content} {"))
+            delayedLines.push(ControlLine("}).toString())"))
         } else {
-            koreanderPrint(expressionCode(code, true), true)
+            lines.add(ExpressionLine(expressionCode(code, false), currentDepth))
         }
 
         return true
@@ -198,10 +245,10 @@ class KoreanderParseEngine(
         val code = iterator.nextForceType(EXPRESSION)
 
         if (iterator.nextIsDeeperWhitespace()) {
-            openTags.push(OpenTag(currentDepth, "}", true))
-            lines.add("${code.content} {")
+            lines.add(ControlLine("${code.content} {"))
+            delayedLines.push(ControlLine("}", currentDepth))
         } else {
-            lines.add(code.content)
+            lines.add(ControlLine(code.content))
         }
 
         return true
@@ -222,6 +269,12 @@ class KoreanderParseEngine(
         return token.type == WHITE_SPACE && token.content.length > currentDepth
     }
 
+    private fun ListIterator<Token>.nextIsClosingWhitespace(): Boolean {
+        hasNext() || return true // end of input, will be closed
+        val token = peek() ?: return false
+        return token.type == WHITE_SPACE && token.content.length <= currentDepth
+    }
+
     private fun ListIterator<Token>.nextIfType(vararg type: Token.Type): Token? {
         val token = peek() ?: return null
 
@@ -236,17 +289,8 @@ class KoreanderParseEngine(
         return nextIfType(*type) ?: throw ExpectedOther(peek() ?: throw UnexpectedEndOfInput(), type.toSet())
     }
 
-    private val currentDepth get() = openTags.lastOrNull()?.depth ?: 0
+    private val currentDepth get() = delayedLines.lastOrNull()?.depth ?: 0
     private val currentWhitespace get() = " ".repeat(currentDepth)
-
-    private fun koreanderPrint(input: String, htmlEscape: Boolean) {
-        val content = if(htmlEscape) {
-            lines.add("$outputVarName.add(_htmlEscape(\"\"\"$currentWhitespace$input\"\"\"))")
-        }
-        else {
-            lines.add("$outputVarName.add(\"\"\"$currentWhitespace$input\"\"\")")
-        }
-    }
 
     private fun inStringExpression(expression: String): String {
         return """${'$'}{$expression}"""
