@@ -1,9 +1,7 @@
 package de.cvguy.kotlin.koreander
 
-import de.cvguy.kotlin.koreander.exception.InvalidTypeException
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert
 import org.junit.Test
 import java.io.InputStream
 
@@ -36,17 +34,6 @@ class KoreanderTest {
         val compiled = koreander.compile("", unit)
         val result = koreander.render(compiled, Unit)
         assertThat(result, instanceOf(String::class.java))
-    }
-
-    @Test
-    fun failsIfWrongTypeIsGiven() {
-        val compiled = koreander.compile("", unit)
-        try {
-            koreander.render(compiled, "This is a String, not Unit")
-            Assert.fail()
-        }
-        catch(e: InvalidTypeException) {
-        }
     }
 
     @Test

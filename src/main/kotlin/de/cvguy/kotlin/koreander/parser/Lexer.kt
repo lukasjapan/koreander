@@ -2,6 +2,7 @@ package de.cvguy.kotlin.koreander.parser
 
 import java.io.File
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
+import org.slf4j.LoggerFactory
 
 class Lexer {
     fun lexFile(input: File) = lexString(input.readText())
@@ -15,6 +16,8 @@ class Lexer {
     // --------------
 
     private class LineLexer(private val input: IndexedValue<String>) {
+        val logger = LoggerFactory.getLogger(javaClass)
+
         // copy constructor
         private constructor(other: LineLexer): this(other.input) {
             position = other.position
@@ -54,7 +57,7 @@ class Lexer {
             result.clear()
             position = 0
 
-            println("Lexing line: $line")
+            logger.debug("Lexing line: {}", line)
 
             // careful when editing
             // the template syntax is very position dependant
@@ -93,7 +96,7 @@ class Lexer {
 
             unshiftSilentCode() || unshiftCode() || unshiftComment() || unshiftText()
 
-            println("Result: $result")
+            logger.debug("Result: {}", result)
 
             return result
         }

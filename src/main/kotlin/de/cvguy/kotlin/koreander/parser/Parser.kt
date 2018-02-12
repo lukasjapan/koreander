@@ -6,6 +6,7 @@ import de.cvguy.kotlin.koreander.exception.UnexpectedEndOfInput
 import de.cvguy.kotlin.koreander.exception.UnexpextedToken
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
 import org.jetbrains.kotlin.backend.common.pop
+import org.slf4j.LoggerFactory
 
 import java.util.Stack
 
@@ -23,6 +24,8 @@ class KoreanderParseEngine(
         tokens: List<Token>,
         val contextClass: String
 ) {
+    val logger = LoggerFactory.getLogger(javaClass)
+
     abstract class TemplateLine(protected val content: String, depth: Int) {
         var depth: Int = depth
             private set
@@ -92,11 +95,9 @@ class KoreanderParseEngine(
         lines.add(ControlLine("})"))
         lines.add(ControlLine("""_koreanderTemplateOutput.joinToString("\n")"""))
 
-        val output = lines.map { it.templateLine() }.filter { it.isNotEmpty() }.joinToString("\n")
-
-        println(output)
-
-        return output
+        return lines.map { it.templateLine() }.filter { it.isNotEmpty() }.joinToString("\n").also {
+            logger.debug("Templace code: {}", it)
+        }
     }
 
     private fun oneLinerTagOutput() {
