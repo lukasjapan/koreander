@@ -3,56 +3,82 @@
 
 # Koreander
 
-Koreander is a template engine for Kotlin that builds HTML code from a clean elegant syntax.
-The view model is accessed by Kotlin Code which makes Koreander templates very vertasile yet being type-safe.
+Koreander is a HTML template engine for Kotlin with a clean elegant [haml](http://haml.info/) inspired syntax.
+
+## Quick Example
+
+**Code**
+
+```kotlin
+data class ViewModel(val name: String)
+
+val viewModel = ViewModel("world")
+
+val input = File("input.kor").readText()
+val output = Koreander().render(input, viewModel)
+```
+
+**input.kor**
 
 ```
 %html
     %body
-        .content Welcome to ${"koreander".capitalized()}!
+        .content Hello ${name.capitalized()}!
 ```
 
-```
+->
+
+```html
 <html>
     <body>
-        <div class="content">
-            Welcome to Koreander!
-        </div>
+        <div class="content">Hello World!</div>
     </body>
 </html>
 ```
 
 ## Introduction
 
-Koreander is a template engine for Kotlin.
-It features an ident based syntax similar to [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
-However, Koreander is completely Kotlin flavored!
+Koreander is a HTML template engine for Kotlin that forces a clean separation of presentation logic and code.
+Templates are executed in the context of a view model that has to be provided explicitly.
+The properties and methods of the view model are accessed directly in pure Kotlin code from the template.
 
-Koreander templates have
+Its ident based syntax similar to [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
+This is done fully Kotlin flavoured, resulting in an amazing syntax!
 
-- type-safety!!
-- excellent performance due to JVM compilation
-- an amazing syntax for logic thanks to Kotlin
-- so much more
+Koreander templates are type-safe!! and have excellent performance due to JVM compilation.
 
 ### Installation
 
-Using Koreander is as simple as adding a line to your package tool.
+Using Koreander is as simple as adding a few lines to your packaging tool.
 For Spring integration see [below](xxx).
 
 #### Gradle
 
-TBA - need to upload the package via CI
+```
+repositories {
+    maven {
+        url  "https://dl.bintray.com/lukasjapan/de.cvguy.kotlin"
+    }
+}
+
+dependencies {
+    compile 'de.cvguy.kotlin:koreander:0.1-WIP'
+}
+```
 
 #### Maven
 
-TBA - need to upload the package via CI
+TBA
 
 #### JAR
 
-TBA - direct link to JAR?
+[JAR file on bintray (0.1-WIP)](https://bintray.com/lukasjapan/de.cvguy.kotlin/download_file?file_path=de%2Fcvguy%2Fkotlin%2Fkoreander%2F0.1-WIP%2Fkoreander-0.1-WIP.jar)
 
-### Quick Example
+## Usage
+
+TBA
+
+### Full Example
 
 A template saved as `input.kor`:
 
@@ -69,6 +95,8 @@ A template saved as `input.kor`:
 View model `TemplateContext` and main code:
 
 ```kotlin
+import de.cvguy.kotlin.koreander.Koreander
+
 data class TemplateContext(
     val name: String,
     val generatorName: String
@@ -87,7 +115,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-Generated HTML:
+Generated output:
 
 ```html
 <html>
@@ -103,19 +131,11 @@ Generated HTML:
 </html>
 ```
 
-The template code is evaluated in the context of the view model instance!
-
-## Usage
-
-TBA
-
 ### Template Context
 
 TBA
 
 ### Syntax
-
-TBA
 
 #### <!DOCTYPE> declaration
 
@@ -175,7 +195,5 @@ Korander is released under the [MIT license](http://www.opensource.org/licenses/
 
 ## TODO
 
-- Attribute escaping
 - Ability to disable html safe
-- Ident on tags with content but without block (%h1 Test -> <h1>Test</h1>)
 - Self closing tags
