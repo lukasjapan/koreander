@@ -53,11 +53,13 @@ class KoreanderParseEngine(
     private val lines = mutableListOf<TemplateLine>()
     private val delayedLines = Stack<TemplateLine>()
 
+    fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt").replace("\"", "&quot;") }
+
     fun parse(): String {
         lines.clear()
 
         lines.add(ControlLine("val _koreanderTemplateOutput = mutableListOf<String>()"))
-        lines.add(ControlLine("""fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt") }"""))
+        lines.add(ControlLine("""fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt").replace("\"", "&quot;") }"""))
         lines.add(ControlLine("(bindings[\"context\"] as $contextClass).apply({"))
 
         unshiftDocType()
@@ -74,7 +76,7 @@ class KoreanderParseEngine(
             val hadOutput = unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
 
             // can close tag on the same line (a little hacky for now)
-            // maybe lines could have types + running a post processor
+            // maybe inside here, search for (more complex) patterns and process pattern wise
             if(hadTag && hadOutput && iterator.nextIsClosingWhitespace()) {
                 oneLinerTagOutput()
             }
@@ -219,10 +221,44 @@ class KoreanderParseEngine(
     }
 
     private fun expressionCode(token: Token, inString: Boolean) = when(token.type) {
-        EXPRESSION -> """(${token.content}).toString()""".let { if(inString) inStringExpression(it) else it }
-        BRACKET_EXPRESSION -> """(${token.content.substring(1, token.content.length - 1)}).toString()""".let { if(inString) inStringExpression(it) else it }
-        QUOTED_STRING -> if(inString) token.content.substring(1, token.content.length - 1) else token.content
-        STRING, TEXT -> if(inString) token.content else """"${token.content}""""
+        EXPRESSION, BRACKET_EXPRESSION -> {
+            val expression = if (token.type == BRACKET_EXPRESSION) {
+                token.content.substring(1, token.content.length - 1)
+            }
+            else {
+                token.content
+            }
+
+            if(inString) {
+                "${'$'}{(${expression}).toString().htmlEscape()}"
+            }
+            else {
+                "(${expression}).toString().htmlEscape()"
+            }
+        }
+        QUOTED_STRING, STRING, TEXT -> {
+            val content = if (token.type == QUOTED_STRING) {
+                token.content.substring(1, token.content.length - 1)
+            }
+            else {
+                token.content
+            }
+
+            val codeSafe = !content.contains('$')
+
+            if(inString && codeSafe) {
+                content.htmlEscape()
+            }
+            else if(inString && !codeSafe) {
+                "${'$'}{${TRIPLE_QUOT + content + TRIPLE_QUOT}.htmlEscape()}"
+            }
+            else if(!inString && codeSafe) {
+                "\"${content.htmlEscape()}\""
+            }
+            else/* if(!inString && !codeSafe) */{
+                TRIPLE_QUOT + token.content.substring(1, token.content.length - 1) + TRIPLE_QUOT + ".htmlEscape()"
+            }
+        }
         else -> throw ExpectedOther(token, setOf(BRACKET_EXPRESSION, QUOTED_STRING, EXPRESSION, STRING))
     }
 
@@ -291,8 +327,4 @@ class KoreanderParseEngine(
 
     private val currentDepth get() = delayedLines.lastOrNull()?.depth ?: 0
     private val currentWhitespace get() = " ".repeat(currentDepth)
-
-    private fun inStringExpression(expression: String): String {
-        return """${'$'}{$expression}"""
-    }
 }

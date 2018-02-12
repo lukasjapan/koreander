@@ -70,7 +70,7 @@ class Lexer {
 
             tryLexing {
                 val hasIdentifier = unshiftIdentifier('#', ELEMENT_ID_IDENTIFIER)
-                val hasExpression = unshiftBracketExpression() || unshiftSimpleString()
+                val hasExpression = unshiftBracketExpression() || unshiftSimpleString(".")
                 hasIdentifier && hasExpression
             }
 
@@ -84,7 +84,7 @@ class Lexer {
                 eatWhitespace()
 
                 tryLexing {
-                    val hasNameExpression = unshiftBracketExpression() || unshiftSimpleString()
+                    val hasNameExpression = unshiftBracketExpression() || unshiftSimpleString("=")
                     val hasConnector = unshiftIdentifier('=', ATTRIBUTE_CONNECTOR)
                     val hasValueExpression = unshiftBracketExpression() || unshiftQuotedString() || unshiftSimpleString()
                     hasNameExpression && hasConnector && hasValueExpression
@@ -189,15 +189,15 @@ class Lexer {
         }
 
         private fun unshiftQuotedString(): Boolean {
-            val match = Regex("^\"(\\.|[^\"])*\"").find(remainingInput) ?: return false
+            val match = Regex("^\"[^\"]*\"").find(remainingInput) ?: return false
 
             unshiftToken(QUOTED_STRING, match.value.length)
 
             return true
         }
 
-        private fun unshiftSimpleString(): Boolean {
-            val match = Regex("^[^ \"={}]+").find(remainingInput) ?: return false
+        private fun unshiftSimpleString(additionalUnallowed: String = ""): Boolean {
+            val match = Regex("^[^ ${Regex.escape(additionalUnallowed)}]+").find(remainingInput) ?: return false
 
             unshiftToken(STRING, match.value.length)
 

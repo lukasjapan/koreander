@@ -13,6 +13,7 @@ data class Token(
         ELEMENT_IDENTIFIER,
         ELEMENT_ID_IDENTIFIER,
         ELEMENT_CLASS_IDENTIFIER,
+        ATTRIBUTE_KEY,
         ATTRIBUTE_CONNECTOR,
         STRING,
         TEXT,
