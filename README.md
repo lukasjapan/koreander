@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/lukasjapan/koreander.svg?branch=master)](https://travis-ci.org/lukasjapan/koreander)
 [![Coverage Status](https://coveralls.io/repos/github/lukasjapan/koreander/badge.svg?branch=master)](https://coveralls.io/github/lukasjapan/koreander?branch=master)
 
-# Koreander
+# ![Koreander](koreander.png) 
 
 Koreander is a HTML template engine for Kotlin with a clean elegant [haml](http://haml.info/) inspired syntax.
 
