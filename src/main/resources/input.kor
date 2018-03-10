@@ -1,7 +1,19 @@
+!!! 5
 %html
     %head
-        %meta name="generator" content={generator.toUpperCase()}
+        %link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"
     %body
-        %h1 Welcome to Koreander
-        .content
-            Hello ${name}!
+        .container
+            %h1 ${title}
+            %table class="table table-striped"
+                %thead
+                    %tr
+                        %th Name
+                        %th Manufacturor
+                        %th Alc. percentage
+                %tbody
+                    - beers.forEach
+                        %tr
+                            %td ${it.name}
+                            %td ${it.manufacturer}
+                            %td ${"%.2f".format(it.alc * 100.0)}%
