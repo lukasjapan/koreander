@@ -83,7 +83,7 @@ For the impatient, here are the main points of the Koreander syntax summarized:
 - Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
 - Code is executed as if it would be inside the view model class
 - Code only lines can be expressed by a leading `-`
-- Deeper indented lines after code only lines are passed to the code as a block  → `expression { /* deeper indented lines */ }` 
+- Deeper indented lines after code are passed to the code as a block  → `expression { /* deeper indented lines */ }` 
 
 
 ### Full Example
