@@ -48,7 +48,7 @@ Koreander templates are also type-safe!! and have excellent performance due to J
 ### Installation
 
 Using Koreander is as simple as adding a few lines to your packaging tool.
-For Spring integration see [below](#Spring).
+For Spring integration see [below](#spring).
 
 #### Gradle
 
@@ -70,93 +70,12 @@ TBA
 
 ## Usage
 
-After initializing a Koreander instance, create the view model and pass it to the `render` function along with the template.
-The template can be passed as `String`, `URL` or `Input Stream`. 
+An introduction of how to use the Koreander template engine.
 
-Detailed information of the syntax can be found below.
-For the impatient, here are the main points of the Koreander syntax summarized:
+### Code
 
-- HTML tags are expressed by a `%` and are closed automatically
-    - `%tag` → `<tag></tag>`
-    - `%tag content` → `<tag>content</tag>`
-- Lines with deeper indent are included inside the next less deep tag
-
-
-```
-%outertag
-    %innertag content
-```
-
-→
-
-```
-<outertag>
-    <innertag>content</innertag>
-</outertag>
-```
-
-- Attributes can be written right after tags
-    - `%tag with="attribute" content` → `<tag with="attribute">content</tag>`
-- There are shortcuts for id (`#`) and class (`.`) attribute
-    - `%tag#myid` → `<tag io="myid"></tag>`
-    - `%tag.myclass` → `<tag class="myclass"></tag>`
-    - `%tag.myclass` → `<tag class="myclass"></tag>`
-- If used, div tags may be omitted
-    - `#myid` → `<div id="myid"></div>`
-    - `.myclass` → `<div class="myclass"></div>`
-- Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
-    - `%tag one plus one is ${1 + 1}` → `<tag>one plus one is 2</tag>`
-- Code is executed as if it would be inside the view model class
-    - `%tag content ${functionOfViewModel()}` → `<tag>content xxxxx</tag>`
-    - `%tag content $propertyOfViewModel` → `<tag>content xxxxx</tag>`
-- Code only lines can be expressed by a leading `-`
-    - `- functionOfViewModel()`
-- Deeper indented lines after code are passed to the code as a block
-
-```
-%ul
-    - $collectionPropertyOfViewModel.forEach
-        %li This is ${it}!
-```
-
-→
-
-```
-<ul>
-        <li>This is xxxx</li>
-        <li>This is xxxx</li>
-        <li>This is xxxx</li>
-        ...
-</ul>
-```
-
-### Full Example
-
-A template saved as `input.kor`:
-
-```
-!!! 5
-%html
-    %head
-        %link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"
-    %body
-        .container
-            %h1 ${title}
-            %table class="table table-striped"
-                %thead
-                    %tr
-                        %th Name
-                        %th Manufacturor
-                        %th Alc. percentage
-                %tbody
-                    - beers.forEach
-                        %tr
-                            %td ${it.name}
-                            %td ${it.manufacturer}
-                            %td ${"%.2f".format(it.alc * 100.0)}%
-```
-
-Code:
+Just create the view model (instance) and pass it to the `render` function of a Koreander instance along with the template.
+The template can be passed as `String`, `URL` or `Input Stream`.
 
 ```kotlin
 import de.cvguy.kotlin.koreander.Koreander
@@ -195,7 +114,94 @@ fun main(args: Array<String>) {
 }
 ```
 
-Generated output:
+### Template Syntax Summarization
+
+Explanation in detail about the Koreander template syntax can be found [below](#template-syntax).
+
+Here are the main points summarized to get you started:
+
+- HTML tags are expressed by a `%` and are closed automatically
+    - `%tag` → `<tag></tag>`
+    - `%tag content` → `<tag>content</tag>`
+- Lines with deeper indent are included inside the next less deep tag
+
+
+```
+%outertag
+    %innertag content
+```
+
+→
+
+```
+<outertag>
+    <innertag>content</innertag>
+</outertag>
+```
+
+- Attributes can be written right after tags
+    - `%tag with=attribute content` → `<tag with="attribute">content</tag>`
+- There are shortcuts for id (`#`) and class (`.`) attribute
+    - `%tag#myid` → `<tag io="myid"></tag>`
+    - `%tag.myclass` → `<tag class="myclass"></tag>`
+    - `%tag.myclass` → `<tag class="myclass"></tag>`
+- If used, div tags may be omitted
+    - `#myid` → `<div id="myid"></div>`
+    - `.myclass` → `<div class="myclass"></div>`
+- Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
+    - `%tag one plus one is ${1 + 1}` → `<tag>one plus one is 2</tag>`
+    - `%tag oneplusone=is${1 + 1}` → `<tag oneplusone="is2"></tag>`
+- Code is executed as if it would be inside the view model class
+    - `%tag content ${functionOfViewModel()}` → `<tag>content xxxxx</tag>`
+    - `%tag content $propertyOfViewModel` → `<tag>content xxxxx</tag>`
+- Code only lines can be expressed by a leading `-`
+    - `- invokeFunctionOfViewModel()`
+- Deeper indented lines after code are passed to the code as a block
+
+```
+%ul
+    - $collectionPropertyOfViewModel.forEach
+        %li This is ${it}!
+```
+
+→
+
+```
+<ul>
+        <li>This is xxxx</li>
+        <li>This is xxxx</li>
+        <li>This is xxxx</li>
+        ...
+</ul>
+```
+
+### Example Template
+
+Using the code above, a template saved as `input.kor` ...
+
+```
+!!! 5
+%html
+    %head
+        %link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"
+    %body
+        .container
+            %h1 ${title}
+            %table class="table table-striped"
+                %thead
+                    %tr
+                        %th Name
+                        %th Manufacturor
+                        %th Alc. percentage
+                %tbody
+                    - beers.forEach
+                        %tr
+                            %td ${it.name}
+                            %td ${it.manufacturer}
+                            %td ${"%.2f".format(it.alc * 100.0)}%
+```
+
+... will generate the following output:
 
 ```html
 <!DOCTYPE html>
@@ -252,7 +258,9 @@ Generated output:
 </html>
 ```
 
-### Syntax
+### Template Syntax
+
+In depth explanation of the template syntax.
 
 #### <!DOCTYPE> declaration
 
@@ -304,7 +312,8 @@ TBA
 
 ### Spring
 
-TBA
+- https://github.com/lukasjapan/koreander-spring
+- https://github.com/lukasjapan/koreander-spring-example
 
 ### Syntax Highlighters
 
