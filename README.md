@@ -76,15 +76,59 @@ The template can be passed as `String`, `URL` or `Input Stream`.
 Detailed information of the syntax can be found below.
 For the impatient, here are the main points of the Koreander syntax summarized:
 
-- HTML tags are opened by `%` and are closed automatically based on indent rules → `%tag`
+- HTML tags are expressed by a `%` and are closed automatically
+    - `%tag` → `<tag></tag>`
+    - `%tag content` → `<tag>content</tag>`
 - Lines with deeper indent are included inside the next less deep tag
-- Attributes can be written right after tags
-- There are shortcuts for div tags →  `.class`, `#id`
-- Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
-- Code is executed as if it would be inside the view model class
-- Code only lines can be expressed by a leading `-`
-- Deeper indented lines after code are passed to the code as a block  → `expression { /* deeper indented lines */ }` 
 
+
+```
+%outertag
+    %innertag content
+```
+
+→
+
+```
+<outertag>
+    <innertag>content</innertag>
+</outertag>
+```
+
+- Attributes can be written right after tags
+    - `%tag with="attribute" content` → `<tag with="attribute">content</tag>`
+- There are shortcuts for id (`#`) and class (`.`) attribute
+    - `%tag#myid` → `<tag io="myid"></tag>`
+    - `%tag.myclass` → `<tag class="myclass"></tag>`
+    - `%tag.myclass` → `<tag class="myclass"></tag>`
+- If used, div tags may be omitted
+    - `#myid` → `<div id="myid"></div>`
+    - `.myclass` → `<div class="myclass"></div>`
+- Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
+    - `%tag one plus one is ${1 + 1}` → `<tag>one plus one is 2</tag>`
+- Code is executed as if it would be inside the view model class
+    - `%tag content ${functionOfViewModel()}` → `<tag>content xxxxx</tag>`
+    - `%tag content $propertyOfViewModel` → `<tag>content xxxxx</tag>`
+- Code only lines can be expressed by a leading `-`
+    - `- functionOfViewModel()`
+- Deeper indented lines after code are passed to the code as a block
+
+```
+%ul
+    - $collectionPropertyOfViewModel.forEach
+        %li This is ${it}!
+```
+
+→
+
+```
+<ul>
+        <li>This is xxxx</li>
+        <li>This is xxxx</li>
+        <li>This is xxxx</li>
+        ...
+</ul>
+```
 
 ### Full Example
 
@@ -212,7 +256,19 @@ Generated output:
 
 #### <!DOCTYPE> declaration
 
-TBA
+A doctype can be specified in the first line of the template.
+The following can be used:
+
+| Identifier | Doctype |
+| --- | --- |
+| !!! | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">` |
+| !!! Strict | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">` |
+| !!! Frameset | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">` |
+| !!! 5 | `<!DOCTYPE html>` |
+| !!! 1.1 | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">` |
+| !!! Basic | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">` |
+| !!! Mobile | `<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">` |
+| !!! RDFa | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">` |
 
 #### HTML Tags
 
