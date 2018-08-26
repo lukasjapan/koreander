@@ -144,10 +144,10 @@ Here are the main points summarized to get you started:
 - There are shortcuts for id (`#`) and class (`.`) attribute
     - `%tag#myid` → `<tag io="myid"></tag>`
     - `%tag.myclass` → `<tag class="myclass"></tag>`
-    - `%tag.myclass` → `<tag class="myclass"></tag>`
 - If used, div tags may be omitted
     - `#myid` → `<div id="myid"></div>`
     - `.myclass` → `<div class="myclass"></div>`
+    - `#myid.myclass` → `<div id="myid" class="myclass"></div>`
 - Texts are evaluated as Kotlin string templates, therefore Kotlin code can be inserted (almost) anywhere
     - `%tag one plus one is ${1 + 1}` → `<tag>one plus one is 2</tag>`
     - `%tag oneplusone=is${1 + 1}` → `<tag oneplusone="is2"></tag>`
@@ -173,6 +173,23 @@ Here are the main points summarized to get you started:
         <li>This is xxxx</li>
         ...
 </ul>
+```
+
+- [Filters](#Filters) can be used for non-html input
+
+```
+:js
+    var name = "World"
+    console.log("Hello " + name");
+```
+
+ →
+
+```
+<script type="test/javascript">
+var name = "World"
+console.log("Hello " + name");
+</script>
 ```
 
 ### Example Template
@@ -306,6 +323,72 @@ TBA
 
 TBA
 
+#### Filters
+
+Filters can process custom input and are expected to transform the output into valid HTML.
+To pass input from the template to a filter start a line or text with a colon followed by the filter identifier.
+
+Input can be passed directly after the identifier on a single line or as a deeper indented block.
+When passed as a block, the indent is cleaned from the input before being processed by the filter.
+
+Filter identifiers must be completely in alphabetic lower case letters.
+
+Ex. 1 - Pass input as Line
+
+```
+%html
+    %body
+        :js alert("Hello World!")
+```
+
+or even
+
+```
+%html
+    %body :js alert("Hello World!")
+```
+
+Ex. 2 - Pass input as Block
+
+```
+%html
+    %head
+        :css
+            body {
+                color: red;
+            }
+```
+
+Build in filters:
+
+| Identifier | Name | Description |
+| --- | --- | --- |
+| unsafehtml | Unsafe HTML Filter | Passes the input as it is, effectively bypassing HTML escaping. |
+| js | Inline Javascript Filter | Surrounds the input with a script tag. |
+| css | Inline Style Filter | Surrounds the input with a style tag. |
+
+##### Custom Filters
+
+*Warning:* In general, implement custom logic inside the view model rather than using filters.
+
+Implement the `KoreanderFilter` interface:
+
+```kotlin
+class MyCustomFilter : KoreanderFilter {
+    override fun filter(input: String): String {
+        return "<p>Do something fancy with ${input} here.</p>"
+    }
+}
+```
+
+
+Add the filter to the `.filters` property of the `Koreander` class:
+
+```kotlin
+val koreander = Koreander()
+koreander.filter["mycustom"] = MyCustomFilter()
+```
+
 ## Support
 
 TBA
@@ -333,5 +416,4 @@ Korander is released under the [MIT license](http://www.opensource.org/licenses/
 
 ## TODO
 
-- Ability to disable html safe
 - Self closing tags

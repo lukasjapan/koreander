@@ -1,6 +1,7 @@
 package de.cvguy.kotlin.koreander
 
-import org.hamcrest.CoreMatchers.instanceOf
+import de.cvguy.kotlin.koreander.filter.KoreanderFilter
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.io.InputStream
@@ -61,5 +62,12 @@ class KoreanderTest {
         val inputStream: InputStream = "".byteInputStream()
         val result = koreander.render(inputStream, unit)
         assertThat(result, instanceOf(String::class.java))
+    }
+
+    @Test
+    fun canAddCustomFilter() {
+        koreander.filters["test"] = object : KoreanderFilter { override fun filter(input: String) = "out" }
+        val result = koreander.render(":test", unit)
+        assertThat(result, equalTo("out"))
     }
 }

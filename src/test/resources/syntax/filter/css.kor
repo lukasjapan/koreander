@@ -1,0 +1,9 @@
+%html
+    %head
+        :css
+            p {
+                color: red;
+            }
+    %body
+        %p content
+

@@ -16,6 +16,7 @@ class SyntaxTest(val input: Path, val output: Path, val testName: String) {
 
     data class TestContext(
             val string: String = "This is a string.",
+            val unsafeString: String = "<script>alert('This is a dangerous string.');</script>",
             val list: List<Int> = listOf(5, 7, 9)
     )
 
@@ -45,7 +46,7 @@ class SyntaxTest(val input: Path, val output: Path, val testName: String) {
                 }
             })
 
-            return fileSets
+            return fileSets //.filter { it[2].toString().startsWith("")}
         }
     }
 

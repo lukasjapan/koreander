@@ -1,9 +1,6 @@
 package de.cvguy.kotlin.koreander.parser
 
-import de.cvguy.kotlin.koreander.exception.ExpectedOther
-import de.cvguy.kotlin.koreander.exception.UnexpectedDocType
-import de.cvguy.kotlin.koreander.exception.UnexpectedEndOfInput
-import de.cvguy.kotlin.koreander.exception.UnexpextedToken
+import de.cvguy.kotlin.koreander.exception.*
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
 import org.jetbrains.kotlin.backend.common.pop
 import org.slf4j.LoggerFactory
@@ -52,6 +49,10 @@ class KoreanderParseEngine(
         override fun outputExpression(): String = (if(depth > 0) TRIPLE_QUOT + " ".repeat(depth) + TRIPLE_QUOT + " + " else "") + content
     }
 
+    class FilteredTemplateLine(content: String, val filter: String, depth: Int) : TemplateLine(content, depth) {
+        override fun outputExpression() = TRIPLE_QUOT + " ".repeat(depth) + TRIPLE_QUOT + " + " + TRIPLE_QUOT + content + TRIPLE_QUOT + """.koreanderFilter("$filter").replace("\n", "\n" + " ".repeat($depth))"""
+    }
+
     private val iterator = tokens.listIterator()
     private val lines = mutableListOf<TemplateLine>()
     private val delayedLines = Stack<TemplateLine>()
@@ -61,8 +62,12 @@ class KoreanderParseEngine(
     fun parse(): String {
         lines.clear()
 
+
+        lines.add(ControlLine("import de.cvguy.kotlin.koreander.filter.KoreanderFilter"))
         lines.add(ControlLine("val _koreanderTemplateOutput = mutableListOf<String>()"))
+        lines.add(ControlLine("val _koreanderFilter = bindings[\"filters\"] as Map<String, KoreanderFilter>"))
         lines.add(ControlLine("""fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt").replace("\"", "&quot;") }"""))
+        lines.add(ControlLine("""fun String.koreanderFilter(filter: String): String { return _koreanderFilter[filter]?.filter(this) ?: "Filter '${"$"}filter' not found." }"""))
         lines.add(ControlLine("(bindings[\"context\"] as $contextClass).apply({"))
 
         unshiftDocType()
@@ -74,14 +79,21 @@ class KoreanderParseEngine(
             // optional whitespace
             unshiftWhiteSpace()
 
+            unshiftFilter(true)
+
             val hadTag = unshiftTag()
 
-            val hadOutput = unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
+            val hadOutput = unshiftFilter(false) || unshiftCode() || unshiftSilentCode() || unshiftComment() || unshiftText()
 
             // can close tag on the same line (a little hacky for now)
             // maybe inside here, search for (more complex) patterns and process pattern wise
             if(hadTag && hadOutput && iterator.nextIsClosingWhitespace()) {
                 oneLinerTagOutput()
+            }
+
+            // there is some output, put it next after opening tag as it seems most natural
+            if(hadTag && hadOutput && iterator.nextIsDeeperWhitespace()) {
+                oneLinerOpenTagOutput()
             }
 
             // nothing has been processed
@@ -119,6 +131,22 @@ class KoreanderParseEngine(
         lines.add(ExpressionLine(expression, depth))
     }
 
+    private fun oneLinerOpenTagOutput() {
+        val expressionLine = lines.pop()
+        val openingTagLine = lines.pop()
+        val depth = openingTagLine.depth
+
+        openingTagLine.resetDepth()
+        expressionLine.resetDepth()
+
+        val expression = listOf(
+                openingTagLine.outputExpression(),
+                expressionLine.outputExpression()
+        ).joinToString(" + ")
+
+        lines.add(ExpressionLine(expression, depth))
+    }
+
     private fun unshiftDocType(): Boolean {
         iterator.nextIfType(DOC_TYPE_IDENTIFIER) ?: return false
         val typeToken = iterator.nextIfType(DOC_TYPE)
@@ -149,6 +177,46 @@ class KoreanderParseEngine(
 
         // remember as current depth
         delayedLines.push(ControlLine("", len))
+
+        return true
+    }
+
+    private fun unshiftFilter(standalone: Boolean): Boolean {
+        val token = iterator.nextIfType(FILTER_IDENTIFIER) ?: return false
+
+        val filter = token.content.trim(':', ' ')
+        var input = ""
+
+        if(standalone && iterator.nextIsDeeperWhitespace()) {
+            // block mode - get all input from deeper indented block
+            val whiteSpace = iterator.next()
+            val baseDepth = whiteSpace.content.length
+            while(true) {
+                val nextToken = iterator.peek()
+                if(nextToken == null) break
+                if(nextToken.type == WHITE_SPACE) {
+                    if(nextToken.content.length < currentDepth) break
+                    if(nextToken.content.length < baseDepth) throw InvalidPluginInputExeption(nextToken)
+                    input += "\n" + iterator.next().content.substring(baseDepth)
+                }
+                else {
+                    input += iterator.next().content
+                }
+            }
+
+            lines.add(FilteredTemplateLine(input, filter, token.character))
+        }
+        else {
+            // one line mode - take all tokens unless next whitespace
+            while(true) {
+                val nextToken = iterator.peek()
+                if(nextToken == null) break
+                if(nextToken.type == WHITE_SPACE) break
+                input += iterator.next().content
+            }
+
+            lines.add(FilteredTemplateLine(input, filter, if(standalone) token.character else 0))
+        }
 
         return true
     }

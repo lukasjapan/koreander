@@ -1,0 +1,6 @@
+%html
+    %body
+        %p
+            :js
+                var test = "Hello"
+                console.log("Some scripting here.")

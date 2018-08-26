@@ -1,0 +1,5 @@
+%html
+    %body
+        %p :unsafehtml filter
+            test
+            test

@@ -64,6 +64,7 @@ class Lexer {
 
             unshiftDocType()
             unshiftWhitespace()
+            unshiftPlugin()
 
             tryLexing {
                 val hasIdentifier = unshiftIdentifier('%', ELEMENT_IDENTIFIER)
@@ -93,6 +94,8 @@ class Lexer {
                     hasNameExpression && hasConnector && hasValueExpression
                 } || break
             }
+
+            unshiftPlugin()
 
             unshiftSilentCode() || unshiftCode() || unshiftComment() || unshiftText()
 
@@ -226,6 +229,14 @@ class Lexer {
             if(count != 0) return false
 
             unshiftToken(BRACKET_EXPRESSION, pos + 1)
+
+            return true
+        }
+
+        private fun unshiftPlugin(): Boolean {
+            val match = Regex("^:[a-z]+( |$)").find(remainingInput) ?: return false
+
+            unshiftToken(FILTER_IDENTIFIER, match.value.length)
 
             return true
         }

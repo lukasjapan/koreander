@@ -1,6 +1,10 @@
 package de.cvguy.kotlin.koreander
 
 import de.cvguy.kotlin.koreander.exception.InvalidTypeException
+import de.cvguy.kotlin.koreander.filter.InlineCssFilter
+import de.cvguy.kotlin.koreander.filter.InlineJavascriptFilter
+import de.cvguy.kotlin.koreander.filter.KoreanderFilter
+import de.cvguy.kotlin.koreander.filter.UnsafeHtmlFilter
 import de.cvguy.kotlin.koreander.parser.KoreanderParser
 import de.cvguy.kotlin.koreander.util.getKType
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
@@ -15,6 +19,11 @@ import kotlin.reflect.KType
 class Koreander {
     val parser = KoreanderParser()
     val engine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+    val filters: MutableMap<String, KoreanderFilter> = mutableMapOf(
+            "unsafehtml" to UnsafeHtmlFilter(),
+            "js" to InlineJavascriptFilter(),
+            "css" to InlineCssFilter()
+    )
 
     init {
         // setup global context etc here
@@ -44,6 +53,7 @@ class Koreander {
         val kotlinScript = CompiledKotlinScript(engine, template.codeLine, template.compiledData)
 
         engine.put("context", context)
+        engine.put("filters", filters)
 
         return kotlinScript.eval().toString()
     }

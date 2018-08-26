@@ -15,6 +15,7 @@ data class Token(
         ELEMENT_CLASS_IDENTIFIER,
         ATTRIBUTE_KEY,
         ATTRIBUTE_CONNECTOR,
+        FILTER_IDENTIFIER,
         STRING,
         TEXT,
         QUOTED_STRING,

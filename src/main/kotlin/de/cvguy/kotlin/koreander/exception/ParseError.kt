@@ -19,3 +19,5 @@ class UnexpectedDocType(token: Token): ParseError("tba", token.line, token.chara
 class ExpectedOther(token: Token, expectedType: Set<Token.Type>): ParseError("tba", token.line, token.character, "Expected ${expectedType.joinToString(",")} but found ${token.type}")
 
 class UnexpectedEndOfInput(): ParseError("tba", 0, 0, "Unexpected end of input")
+
+class InvalidPluginInputExeption(invalidWhitespace: Token) : ParseError("tba", invalidWhitespace.line, invalidWhitespace.character + invalidWhitespace.content.length, "Invalid plugin input. Keep whitespace sane.")
