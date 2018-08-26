@@ -325,11 +325,11 @@ TBA
 
 #### Filters
 
-Filters can process custom input and are expected to transform the output into valid HTML.
+Filters can process custom input and are expected to transform it into valid HTML.
 To pass input from the template to a filter start a line or text with a colon followed by the filter identifier.
 
 Input can be passed directly after the identifier on a single line or as a deeper indented block.
-When passed as a block, the indent is cleaned from the input before being processed by the filter.
+When passed as a block, the indent is cleaned from the input before being processed by the filter and then added back to the output.
 
 Filter identifiers must be completely in alphabetic lower case letters.
 
