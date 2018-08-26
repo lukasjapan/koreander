@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    compile 'de.cvguy.kotlin:koreander:0.0.1'
+    compile 'de.cvguy.kotlin:koreander:0.0.2'
 }
 ```
 
