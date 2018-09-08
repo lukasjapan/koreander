@@ -352,7 +352,7 @@ TBA
 #### Filters
 
 Filters can process custom input and are expected to transform it into valid HTML.
-To pass input from the template to a filter start a line or text with a colon followed by the filter identifier.
+To pass input from the template to a filter, start a line or text with a colon followed by the filter identifier.
 
 Input can be passed directly after the identifier on a single line or as a deeper indented block.
 When passed as a block, the indent is cleaned from the input before being processed by the filter and then added back to the output.
@@ -413,6 +413,13 @@ Add the filter to the `.filters` property of the `Koreander` class:
 ```kotlin
 val koreander = Koreander()
 koreander.filter["mycustom"] = MyCustomFilter()
+```
+
+Usage:
+
+```
+%html
+    %body :mycustom Process me!
 ```
 
 ## Support
