@@ -28,7 +28,7 @@ class KoreanderParseEngine(
             private set
 
         abstract fun outputExpression(): String
-        open fun templateLine(): String = "_koreanderTemplateOutput.add(${outputExpression()})"
+        open fun templateLine(): String { return outputExpression().let { if(it.isEmpty()) "" else "_koreanderTemplateOutput.add($it)"} }
         fun resetDepth() { depth = 0 }
     }
 
@@ -51,6 +51,10 @@ class KoreanderParseEngine(
 
     class FilteredTemplateLine(content: String, val filter: String, depth: Int) : TemplateLine(content, depth) {
         override fun outputExpression() = TRIPLE_QUOT + " ".repeat(depth) + TRIPLE_QUOT + " + " + TRIPLE_QUOT + content + TRIPLE_QUOT + """.koreanderFilter("$filter").replace("\n", "\n" + " ".repeat($depth))"""
+    }
+
+    class NopTemplateLine(): TemplateLine("", 0) {
+        override fun outputExpression() = ""
     }
 
     private val iterator = tokens.listIterator()
@@ -267,12 +271,37 @@ class KoreanderParseEngine(
         val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
-        if(iterator.nextIsClosingWhitespace()) {
+        val selfClosing = listOf(
+                "area",
+                "base",
+                "br",
+                "col",
+                "command",
+                "embed",
+                "hr",
+                "img",
+                "input",
+                "keygen",
+                "link",
+                "menuitem",
+                "meta",
+                "param",
+                "source",
+                "track",
+                "wbr"
+        ).contains(name)
+
+        if(iterator.nextIsClosingWhitespace() && !selfClosing) {
             lines.add(HtmlSafeTemplateLine("<$name$id$classes$attribute></$name>", currentDepth))
         }
         else {
             lines.add(HtmlSafeTemplateLine("<$name$id$classes$attribute>", currentDepth))
-            delayedLines.push(HtmlSafeTemplateLine("</$name>", currentDepth))
+
+            if (selfClosing) {
+                delayedLines.push(NopTemplateLine())
+            } else {
+                delayedLines.push(HtmlSafeTemplateLine("</$name>", currentDepth))
+            }
         }
 
         return true

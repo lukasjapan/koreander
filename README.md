@@ -139,6 +139,8 @@ Here are the main points summarized to get you started:
 </outertag>
 ```
 
+- Void Elements are closed automatically
+    - `%br something` → `<br>something`
 - Attributes can be written right after tags
     - `%tag with=attribute content` → `<tag with="attribute">content</tag>`
 - There are shortcuts for id (`#`) and class (`.`) attribute
@@ -299,6 +301,30 @@ The following can be used:
 
 TBA
 
+##### Void Elements
+
+[Void elements](https://www.w3.org/TR/2012/WD-html-markup-20120320/syntax.html#syntax-elements) are not allowed to have content and are closed automatically.
+Currently, regardless of the doctype they are closed without slash (`<br/>`) or space-slash (`<br />`).
+
+List of automatically closed elements:
+
+- area
+- base
+- br
+- col
+- command
+- embed
+- hr
+- img
+- input
+- keygen
+- link
+- meta
+- param
+- source
+- track
+- wbr
+
 #### Attributes
 
 TBA
@@ -413,7 +439,3 @@ Korander is released under the [MIT license](http://www.opensource.org/licenses/
 ## Authors
 
 - Lukas Prasuhn
-
-## TODO
-
-- Self closing tags
