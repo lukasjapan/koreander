@@ -139,7 +139,7 @@ Here are the main points summarized to get you started:
 </outertag>
 ```
 
-- Void Elements are closed automatically
+- No closing tags for Void Elements
     - `%br something` → `<br>something`
 - Attributes can be written right after tags
     - `%tag with=attribute content` → `<tag with="attribute">content</tag>`
@@ -226,7 +226,7 @@ Using the code above, a template saved as `input.kor` ...
 <!DOCTYPE html>
 <html>
     <head>
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"></link>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
     </head>
     <body>
         <div class="container">
@@ -303,10 +303,10 @@ TBA
 
 ##### Void Elements
 
-[Void elements](https://www.w3.org/TR/2012/WD-html-markup-20120320/syntax.html#syntax-elements) are not allowed to have content and are closed automatically.
-Currently, regardless of the doctype they are closed without slash (`<br/>`) or space-slash (`<br />`).
+[Void elements](https://www.w3.org/TR/2012/WD-html-markup-20120320/syntax.html#syntax-elements) are not allowed to have content and its closing tag is omitted.
+Currently, regardless of the doctype the alternate closing notations slash (`<br/>`) or space-slash (`<br />`) are not used.
 
-List of automatically closed elements:
+List of void elements:
 
 - area
 - base
