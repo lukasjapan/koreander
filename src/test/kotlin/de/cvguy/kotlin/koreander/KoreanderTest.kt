@@ -4,6 +4,7 @@ import de.cvguy.kotlin.koreander.filter.KoreanderFilter
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
+import java.io.File
 import java.io.InputStream
 
 class KoreanderTest {
@@ -31,6 +32,13 @@ class KoreanderTest {
     }
 
     @Test
+    fun canCompileFile() {
+        val file = File("src/test/resources/empty.kor")
+        val result = koreander.compile(file, unit)
+        assertThat(result, instanceOf(CompiledTemplate::class.java))
+    }
+
+    @Test
     fun canRenderCompiledTemplate() {
         val compiled = koreander.compile("", unit)
         val result = koreander.render(compiled, Unit)
@@ -54,6 +62,13 @@ class KoreanderTest {
     fun canRenderURL() {
         val url = javaClass.getResource("/empty.kor")
         val result = koreander.render(url, unit)
+        assertThat(result, instanceOf(String::class.java))
+    }
+
+    @Test
+    fun canRenderFile() {
+        val file = File("src/test/resources/empty.kor")
+        val result = koreander.render(file, unit)
         assertThat(result, instanceOf(String::class.java))
     }
 

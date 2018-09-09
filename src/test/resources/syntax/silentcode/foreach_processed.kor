@@ -1,0 +1,6 @@
+%html
+    %body
+        %ul
+            - list.map { i -> i * 2 }.forEach -> item
+                %li
+                    = item

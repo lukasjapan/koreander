@@ -1,0 +1,4 @@
+%html
+    %body
+        = string.let -> theString
+            - theString.toUpperCase()

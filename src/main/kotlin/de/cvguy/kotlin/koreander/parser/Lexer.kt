@@ -153,7 +153,8 @@ class Lexer {
             Regex("^-.+\$").find(remainingInput) ?: return false
 
             unshiftToken(SILENT_CODE_IDENTIFIER, 1)
-            unshiftToken(EXPRESSION)
+
+            unshiftCodeExpression()
 
             return true
         }
@@ -162,9 +163,23 @@ class Lexer {
             Regex("^=.+\$").find(remainingInput) ?: return false
 
             unshiftToken(CODE_IDENTIFIER, 1)
-            unshiftToken(EXPRESSION)
+
+            unshiftCodeExpression()
 
             return true
+        }
+
+        private fun unshiftCodeExpression() {
+            val varPart = Regex("( *-> *)[a-zA-Z0-9 ,:\\(\\)]*\$").find(remainingInput)
+
+            if(varPart != null) {
+                unshiftToken(EXPRESSION,remainingInput.length - varPart.groupValues[0].length)
+                unshiftToken(LAMBDA_VARIABLES_IDENTIFIER, varPart.groupValues[1].length)
+                unshiftToken(LAMBDA_VARIABLES)
+            }
+            else {
+                unshiftToken(EXPRESSION)
+            }
         }
 
         private fun unshiftComment(): Boolean {

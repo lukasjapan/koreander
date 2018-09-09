@@ -364,10 +364,17 @@ class KoreanderParseEngine(
         iterator.nextIfType(CODE_IDENTIFIER) ?: return false
         val code = iterator.nextForceType(EXPRESSION)
 
+        val vars = iterator.peek()?.takeIf { it.type == LAMBDA_VARIABLES_IDENTIFIER }?.let {
+            iterator.next()
+            iterator.nextForceType(LAMBDA_VARIABLES).content
+        }
+
         if (iterator.nextIsDeeperWhitespace()) {
-            lines.add(ControlLine("_koreanderTemplateOutput.add(\"$currentWhitespace\" + (${code.content} {"))
+            val varStr = vars?.let { " ${it} ->" } ?: ""
+            lines.add(ControlLine("_koreanderTemplateOutput.add(\"$currentWhitespace\" + (${code.content} {${varStr}"))
             delayedLines.push(ControlLine("}).toString())"))
         } else {
+            if(vars != null) throw ExpectedBlock(code)
             lines.add(ExpressionLine(expressionCode(code, false), currentDepth))
         }
 
@@ -378,10 +385,17 @@ class KoreanderParseEngine(
         iterator.nextIfType(SILENT_CODE_IDENTIFIER) ?: return false
         val code = iterator.nextForceType(EXPRESSION)
 
+        val vars = iterator.peek()?.takeIf { it.type == LAMBDA_VARIABLES_IDENTIFIER }?.let {
+            iterator.next()
+            iterator.nextForceType(LAMBDA_VARIABLES).content
+        }
+
         if (iterator.nextIsDeeperWhitespace()) {
-            lines.add(ControlLine("${code.content} {"))
+            val varStr = vars?.let { " ${it} ->" } ?: ""
+            lines.add(ControlLine("${code.content} {${varStr}"))
             delayedLines.push(ControlLine("}", currentDepth))
         } else {
+            if(vars != null) throw ExpectedBlock(code)
             lines.add(ControlLine(code.content))
         }
 
