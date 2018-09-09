@@ -10,6 +10,7 @@ import de.cvguy.kotlin.koreander.util.getKType
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
 import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory
 import org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmScriptEngineBase.CompiledKotlinScript
+import java.io.File
 import java.io.InputStream
 import java.net.URL
 import java.nio.charset.Charset
@@ -35,6 +36,10 @@ class Koreander {
 
     inline fun <reified T : Any>render(url: URL, context: T, charset: Charset = StandardCharsets.UTF_8): String {
         return render(url.readText(charset), context)
+    }
+
+    inline fun <reified T : Any>render(file: File, context: T, charset: Charset = StandardCharsets.UTF_8): String {
+        return render(file.readText(charset), context)
     }
 
     inline fun <reified T : Any>render(string: String, context: T): String {
@@ -64,6 +69,10 @@ class Koreander {
 
     fun compile(url: URL, type: KType, charset: Charset = StandardCharsets.UTF_8): CompiledTemplate {
         return compile(url.readText(charset), type)
+    }
+
+    fun compile(file: File, type: KType, charset: Charset = StandardCharsets.UTF_8): CompiledTemplate {
+        return compile(file.readText(charset), type)
     }
 
     fun compile(input: String, type: KType): CompiledTemplate {

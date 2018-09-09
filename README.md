@@ -13,8 +13,7 @@ Koreander is a HTML template engine for Kotlin with a clean elegant [haml](http:
 data class ViewModel(val name: String)
 
 val viewModel = ViewModel("world")
-
-val input = File("input.kor").readText()
+val input = File("input.kor")
 val output = Koreander().render(input, viewModel)
 ```
 
@@ -42,7 +41,7 @@ Koreander is a HTML template engine for Kotlin.
 Html tags are defined by an indent based syntax that is similar to [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
 Templates are executed in the context of a view model class from where the properties and methods can be accessed in pure Kotlin code.
 
-By combining the simplicity of Kotlin and HAML, the Koreander template syntax is simply amazing.
+By combining the simplicity of Kotlin and HAML, the Koreander template syntax is simply beautiful.
 Koreander templates are also type-safe!! and have excellent performance due to JVM compilation.
 
 ### Installation
@@ -75,7 +74,7 @@ An introduction of how to use the Koreander template engine.
 ### Code
 
 Just create the view model (instance) and pass it to the `render` function of a Koreander instance along with the template.
-The template can be passed as `String`, `URL` or `Input Stream`.
+The template can be passed as `String`, `File`, `URL` or `Input Stream`.
 
 ```kotlin
 import de.cvguy.kotlin.koreander.Koreander
@@ -144,7 +143,7 @@ Here are the main points summarized to get you started:
 - Attributes can be written right after tags
     - `%tag with=attribute content` → `<tag with="attribute">content</tag>`
 - There are shortcuts for id (`#`) and class (`.`) attribute
-    - `%tag#myid` → `<tag io="myid"></tag>`
+    - `%tag#myid` → `<tag id="myid"></tag>`
     - `%tag.myclass` → `<tag class="myclass"></tag>`
 - If used, div tags may be omitted
     - `#myid` → `<div id="myid"></div>`
