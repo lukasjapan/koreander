@@ -165,7 +165,7 @@ Here are the main points summarized to get you started:
     - $collectionPropertyOfViewModel.forEach
         %li This is ${it}!
     - $collectionPropertyOfViewModel.forEach -> item
-            %li This is ${item}!
+        %li This is ${item}!
 ```
 
 →
