@@ -163,6 +163,8 @@ Here are the main points summarized to get you started:
 %ul
     - $collectionPropertyOfViewModel.forEach
         %li This is ${it}!
+    - $collectionPropertyOfViewModel.forEach -> item
+            %li This is ${item}!
 ```
 
 →
@@ -176,7 +178,7 @@ Here are the main points summarized to get you started:
 </ul>
 ```
 
-- [Filters](#Filters) can be used for non-html input
+- [Filters](#filters) can be used for non-html input
 
 ```
 :js
