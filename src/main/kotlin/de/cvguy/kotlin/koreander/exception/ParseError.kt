@@ -21,3 +21,5 @@ class ExpectedOther(token: Token, expectedType: Set<Token.Type>): ParseError("tb
 class UnexpectedEndOfInput(): ParseError("tba", 0, 0, "Unexpected end of input")
 
 class InvalidPluginInputExeption(invalidWhitespace: Token) : ParseError("tba", invalidWhitespace.line, invalidWhitespace.character + invalidWhitespace.content.length, "Invalid plugin input. Keep whitespace sane.")
+
+class ExpectedBlock(token: Token) : ParseError("tba", token.line + 1, 0, "Expected a deeper indented block.")

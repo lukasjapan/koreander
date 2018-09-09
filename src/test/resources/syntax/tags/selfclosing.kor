@@ -1,0 +1,19 @@
+%html
+    %body
+        %area content
+        %base
+        %br
+        %col
+        %command
+        %embed
+        %hr
+        %img src=attribute alt=attribute
+        %input
+        %keygen
+        %link
+        %menuitem
+        %meta
+        %param
+        %source
+        %track
+        %wbr
