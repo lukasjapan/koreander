@@ -8,18 +8,23 @@ class Lexer {
     fun lexFile(input: File) = lexString(input.readText())
     fun lexString(input: String): List<Token> {
         val indexedLines = input.split("\n").withIndex()
-        return indexedLines.map { LineLexer(it).lexLine() }.flatten()
+        var offset = 0
+        return indexedLines.map { indexedLine ->
+            LineLexer(indexedLine, offset).lexLine().also {
+                offset += indexedLine.value.length + 1
+            }
+        }.flatten()
     }
 
     // --------------
     // private
     // --------------
 
-    private class LineLexer(private val input: IndexedValue<String>) {
+    private class LineLexer(private val input: IndexedValue<String>, private val offset: Int) {
         val logger = LoggerFactory.getLogger(javaClass)
 
         // copy constructor
-        private constructor(other: LineLexer): this(other.input) {
+        private constructor(other: LineLexer): this(other.input, other.offset) {
             position = other.position
             result.addAll(other.result)
         }
@@ -39,7 +44,8 @@ class Lexer {
                             type,
                             input.value.substring(position, position + len),
                             line,
-                            position
+                            position,
+                            offset + position
                     )
             )
             move(len)

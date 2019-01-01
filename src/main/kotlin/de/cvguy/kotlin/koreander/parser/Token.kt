@@ -4,7 +4,8 @@ data class Token(
         val type: Type,
         val content: String,
         val line: Int,
-        val character: Int
+        val character: Int,
+        val offset: Int
 ) {
     enum class Type {
         DOC_TYPE_IDENTIFIER,
