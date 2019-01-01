@@ -39,7 +39,7 @@ val output = Koreander().render(input, viewModel)
 ## Introduction
 
 Koreander is a HTML template engine for Kotlin.
-Html tags are defined by an indent based syntax that is similar to [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
+Html tags are defined by an indent based syntax that is similar to [pug](https://github.com/pugjs/pug) (JavaScript), [jade4j](https://github.com/neuland/jade4j) (Java) or [slim](http://slim-lang.com/)/[haml](http://haml.info/) (Ruby).
 Templates are executed in the context of a view model class from where the properties and methods can be accessed in pure Kotlin code.
 
 By combining the simplicity of Kotlin and HAML, the Koreander template syntax is simply beautiful.
