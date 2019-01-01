@@ -146,6 +146,7 @@ Here are the main points summarized to get you started:
 - There are shortcuts for id (`#`) and class (`.`) attribute
     - `%tag#myid` → `<tag id="myid"></tag>`
     - `%tag.myclass` → `<tag class="myclass"></tag>`
+    - `%tag#myid.myclass` → `<tag id="myid" class="myclass"></tag>`
 - If used, div tags may be omitted
     - `#myid` → `<div id="myid"></div>`
     - `.myclass` → `<div class="myclass"></div>`

@@ -1,0 +1,7 @@
+%html
+    %body
+        .test
+            %p test div with test class
+            %span.test test span with test class
+            %span#test2 test span with test id
+            %span#test3.test test span with test id and class

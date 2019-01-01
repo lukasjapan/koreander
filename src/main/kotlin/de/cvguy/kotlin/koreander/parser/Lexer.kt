@@ -74,7 +74,7 @@ class Lexer {
 
             tryLexing {
                 val hasIdentifier = unshiftIdentifier('%', ELEMENT_IDENTIFIER)
-                val hasExpression = unshiftBracketExpression() || unshiftSimpleString()
+                val hasExpression = unshiftBracketExpression() || unshiftSimpleString("#.")
                 hasIdentifier && hasExpression
             }
 
