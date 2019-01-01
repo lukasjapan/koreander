@@ -268,7 +268,7 @@ class KoreanderParseEngine(
 
         val name = if(elementExpression == null) "div" else expressionCode(elementExpression, true)
         val id = if(elementIdExpression == null) "" else appendAttributeString("id", elementIdExpression)
-        val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
+        val classes = if(elementClassExpression == null) "" else appendClassAttributeString(elementClassExpression)
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
         val selfClosing = listOf(
@@ -310,6 +310,10 @@ class KoreanderParseEngine(
     private fun appendAttributeString(name: String, value: Token): String {
         val valueExpression = expressionCode(value, true)
         return """ $name="$valueExpression""""
+    }
+
+    private fun appendClassAttributeString(value: Token): String {
+        return appendAttributeString("class", value).replace(".", " ")
     }
 
     private fun appendAttributeCode(name: Token, value: Token): String {
