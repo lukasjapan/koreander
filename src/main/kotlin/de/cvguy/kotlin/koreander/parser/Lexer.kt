@@ -84,10 +84,12 @@ class Lexer {
                 hasIdentifier && hasExpression
             }
 
-            tryLexing {
-                val hasIdentifier = unshiftIdentifier('.', ELEMENT_CLASS_IDENTIFIER)
-                val hasExpression = unshiftBracketExpression() || unshiftSimpleString()
-                hasIdentifier && hasExpression
+            while(true) {
+                tryLexing {
+                    val hasIdentifier = unshiftIdentifier('.', ELEMENT_CLASS_IDENTIFIER)
+                    val hasExpression = unshiftBracketExpression() || unshiftSimpleString(".")
+                    hasIdentifier && hasExpression
+                } || break
             }
 
             while(true) {

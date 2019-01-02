@@ -3,6 +3,7 @@ package de.cvguy.kotlin.koreander.parser
 import de.cvguy.kotlin.koreander.exception.*
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
 import org.jetbrains.kotlin.backend.common.pop
+import org.jetbrains.kotlin.backend.common.push
 import org.slf4j.LoggerFactory
 
 import java.util.Stack
@@ -250,11 +251,17 @@ class KoreanderParseEngine(
         val elementIdToken = iterator.nextIfType(ELEMENT_ID_IDENTIFIER)
         val elementIdExpression = elementIdToken?.let { iterator.nextForceType(BRACKET_EXPRESSION, STRING) }
 
-        val elementClassToken = iterator.nextIfType(ELEMENT_CLASS_IDENTIFIER)
-        val elementClassExpression = elementClassToken?.let { iterator.nextForceType(BRACKET_EXPRESSION, STRING) }
+        val elementClassExpressions = mutableListOf<Token>()
+
+        while(true) {
+            iterator.nextIfType(ELEMENT_CLASS_IDENTIFIER) ?: break
+            elementClassExpressions.push(iterator.nextForceType(BRACKET_EXPRESSION, STRING))
+        }
 
         // must have at least one defined
-        elementToken ?: elementIdToken ?: elementClassToken ?: return false
+        if(elementToken == null && elementIdToken == null && elementClassExpressions.isEmpty()) {
+            return false;
+        }
 
         val attributes = mutableListOf<Pair<Token, Token>>()
 
@@ -268,7 +275,7 @@ class KoreanderParseEngine(
 
         val name = if(elementExpression == null) "div" else expressionCode(elementExpression, true)
         val id = if(elementIdExpression == null) "" else appendAttributeString("id", elementIdExpression)
-        val classes = if(elementClassExpression == null) "" else appendAttributeString("class", elementClassExpression)
+        val classes = if(elementClassExpressions.isEmpty()) "" else appendClassString(elementClassExpressions)
         val attribute = attributes.map { appendAttributeCode(it.first, it.second) }.joinToString("")
 
         val selfClosing = listOf(
@@ -310,6 +317,11 @@ class KoreanderParseEngine(
     private fun appendAttributeString(name: String, value: Token): String {
         val valueExpression = expressionCode(value, true)
         return """ $name="$valueExpression""""
+    }
+
+    private fun appendClassString(values: List<Token>): String {
+        val valueExpression = values.map { expressionCode(it, true) }.joinToString(" ")
+        return """ class="$valueExpression""""
     }
 
     private fun appendAttributeCode(name: Token, value: Token): String {
