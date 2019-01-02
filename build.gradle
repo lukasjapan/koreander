@@ -21,7 +21,7 @@ plugins {
 
 def koreanderGroup = 'de.cvguy.kotlin'
 def koreanderName = 'koreander'
-def koreanderVersion = '0.0.5'
+def koreanderVersion = '0.0.6'
 
 group koreanderGroup
 version koreanderVersion
