@@ -209,7 +209,7 @@ Using the code above, a template saved as `input.kor` ...
     %body
         .container
             %h1 ${title}
-            %table class="table table-striped"
+            %table.table.table-striped
                 %thead
                     %tr
                         %th Name
