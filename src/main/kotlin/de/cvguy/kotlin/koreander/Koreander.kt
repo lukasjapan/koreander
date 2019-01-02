@@ -88,7 +88,7 @@ class Koreander {
     }
 
     companion object {
-        inline fun <reified T : Any>typeOf(@SuppressWarnings("unused") instance: T) = getKType<T>()
+        inline fun <reified T : Any>typeOf(@Suppress("UNUSED_PARAMETER") instance: T) = getKType<T>()
     }
 }
 
