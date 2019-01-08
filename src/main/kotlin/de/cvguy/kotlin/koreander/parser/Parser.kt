@@ -54,13 +54,14 @@ class KoreanderParseEngine(
         override fun outputExpression() = TRIPLE_QUOT + " ".repeat(depth) + TRIPLE_QUOT + " + " + TRIPLE_QUOT + content + TRIPLE_QUOT + """.koreanderFilter("$filter").replace("\n", "\n" + " ".repeat($depth))"""
     }
 
-    class NopTemplateLine(): TemplateLine("", 0) {
+    class NopTemplateLine(depth: Int): TemplateLine("", depth) {
         override fun outputExpression() = ""
     }
 
     private val iterator = tokens.listIterator()
     private val lines = mutableListOf<TemplateLine>()
     private val delayedLines = Stack<TemplateLine>()
+    private val depthStack = Stack<Int>()
 
     fun String.htmlEscape(): String { return replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt").replace("\"", "&quot;") }
 
@@ -131,7 +132,7 @@ class KoreanderParseEngine(
                 openingTagLine.outputExpression(),
                 expressionLine.outputExpression(),
                 closingTagLine.outputExpression()
-        ).joinToString(" + ")
+        ).filter { it.isNotBlank() }.joinToString(" + ")
 
         lines.add(ExpressionLine(expression, depth))
     }
@@ -180,8 +181,7 @@ class KoreanderParseEngine(
 
         closeOpenTags(len)
 
-        // remember as current depth
-        delayedLines.push(ControlLine("", len))
+        depthStack.push(len)
 
         return true
     }
@@ -227,8 +227,12 @@ class KoreanderParseEngine(
     }
 
     private fun closeOpenTags(downTo: Int) {
-        while (delayedLines.isNotEmpty() && currentDepth >= downTo) {
+        while (delayedLines.isNotEmpty() && delayedLines.last().depth >= downTo) {
             lines.add(delayedLines.pop())
+        }
+
+        while (depthStack.isNotEmpty() && currentDepth >= downTo) {
+            depthStack.pop()
         }
     }
 
@@ -305,7 +309,8 @@ class KoreanderParseEngine(
             lines.add(HtmlSafeTemplateLine("<$name$id$classes$attribute>", currentDepth))
 
             if (selfClosing) {
-                delayedLines.push(NopTemplateLine())
+                // need to put this fake closing tag to fool 'oneLinerTagOutput' logic
+                delayedLines.push(NopTemplateLine(currentDepth))
             } else {
                 delayedLines.push(HtmlSafeTemplateLine("</$name>", currentDepth))
             }
@@ -449,6 +454,6 @@ class KoreanderParseEngine(
         return nextIfType(*type) ?: throw ExpectedOther(peek() ?: throw UnexpectedEndOfInput(), type.toSet())
     }
 
-    private val currentDepth get() = delayedLines.lastOrNull()?.depth ?: 0
+    private val currentDepth get() = depthStack.lastOrNull() ?: 0
     private val currentWhitespace get() = " ".repeat(currentDepth)
 }
