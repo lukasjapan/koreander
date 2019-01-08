@@ -19,7 +19,7 @@ import kotlin.reflect.KType
 
 class Koreander {
     val parser = KoreanderParser()
-    val engine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
+
     val filters: MutableMap<String, KoreanderFilter> = mutableMapOf(
             "unsafehtml" to UnsafeHtmlFilter(),
             "js" to InlineJavascriptFilter(),
@@ -55,6 +55,7 @@ class Koreander {
     }
 
     fun unsafeRender(template: CompiledTemplate, context: Any): String {
+        val engine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
         val kotlinScript = CompiledKotlinScript(engine, template.codeLine, template.compiledData)
 
         engine.put("context", context)
@@ -76,6 +77,7 @@ class Koreander {
     }
 
     fun compile(input: String, type: KType): CompiledTemplate {
+        val engine = KotlinJsr223JvmLocalScriptEngineFactory().scriptEngine as KotlinJsr223JvmLocalScriptEngine
         val kotlinScriptCode = parser.generateScriptCode(input, type.toString())
 
         val kotlinScript = engine.compile(kotlinScriptCode) as CompiledKotlinScript

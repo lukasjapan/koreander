@@ -10,6 +10,7 @@ import java.io.InputStream
 class KoreanderTest {
     val koreander = Koreander()
     val unit = Koreander.typeOf(Unit)
+    val string = Koreander.typeOf(String)
 
     @Test
     fun canCompileString() {
@@ -43,6 +44,20 @@ class KoreanderTest {
         val compiled = koreander.compile("", unit)
         val result = koreander.render(compiled, Unit)
         assertThat(result, instanceOf(String::class.java))
+    }
+
+    @Test
+    fun multipleCompiles() {
+        val compiled = koreander.compile("", unit)
+        val result = koreander.render(compiled, Unit)
+        assertThat(result, instanceOf(String::class.java))
+
+        val compiled2 = koreander.compile("", string)
+        val result2 = koreander.render(compiled2, String)
+        assertThat(result2, instanceOf(String::class.java))
+
+        val result3 = koreander.render(compiled, Unit)
+        assertThat(result3, instanceOf(String::class.java))
     }
 
     @Test
