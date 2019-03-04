@@ -415,7 +415,7 @@ Add the filter to the `.filters` property of the `Koreander` class:
 
 ```kotlin
 val koreander = Koreander()
-koreander.filter["mycustom"] = MyCustomFilter()
+koreander.filters["mycustom"] = MyCustomFilter()
 ```
 
 Usage:
