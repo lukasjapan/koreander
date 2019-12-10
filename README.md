@@ -213,7 +213,7 @@ Using the code above, a template saved as `input.kor` ...
                 %thead
                     %tr
                         %th Name
-                        %th Manufacturor
+                        %th Manufacturer
                         %th Alc. percentage
                 %tbody
                     - beers.forEach
@@ -238,7 +238,7 @@ Using the code above, a template saved as `input.kor` ...
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Manufacturor</th>
+                        <th>Manufacturer</th>
                         <th>Alc. percentage</th>
                     </tr>
                 </thead>
