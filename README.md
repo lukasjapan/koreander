@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.0.8-brightgreen.svg)](https://github.com/lukasjapan/koreander)
+[![Version](https://img.shields.io/badge/version-0.0.9-brightgreen.svg)](https://github.com/lukasjapan/koreander)
 [![Build Status](https://travis-ci.org/lukasjapan/koreander.svg?branch=master)](https://travis-ci.org/lukasjapan/koreander)
 [![Coverage Status](https://coveralls.io/repos/github/lukasjapan/koreander/badge.svg?branch=master)](https://coveralls.io/github/lukasjapan/koreander?branch=master)
 
@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    compile 'de.cvguy.kotlin:koreander:0.0.8'
+    compile 'de.cvguy.kotlin:koreander:0.0.9'
 }
 ```
 
@@ -213,7 +213,7 @@ Using the code above, a template saved as `input.kor` ...
                 %thead
                     %tr
                         %th Name
-                        %th Manufacturor
+                        %th Manufacturer
                         %th Alc. percentage
                 %tbody
                     - beers.forEach
@@ -238,7 +238,7 @@ Using the code above, a template saved as `input.kor` ...
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Manufacturor</th>
+                        <th>Manufacturer</th>
                         <th>Alc. percentage</th>
                     </tr>
                 </thead>
