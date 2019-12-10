@@ -87,6 +87,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlin_version"
     compile "org.slf4j:slf4j-api:1.+"
+    compile "net.java.dev.jna:jna:+"
     testCompile 'io.kotlintest:kotlintest-runner-junit4:3.4.2'
 }
 
