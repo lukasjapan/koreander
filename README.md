@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.0.10-brightgreen.svg)](https://github.com/lukasjapan/koreander)
+[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](https://github.com/lukasjapan/koreander)
 [![Build Status](https://travis-ci.org/lukasjapan/koreander.svg?branch=master)](https://travis-ci.org/lukasjapan/koreander)
 [![Coverage Status](https://coveralls.io/repos/github/lukasjapan/koreander/badge.svg?branch=master)](https://coveralls.io/github/lukasjapan/koreander?branch=master)
 
@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'de.cvguy.kotlin:koreander:0.0.10'
+    implementation 'de.cvguy.kotlin:koreander:0.1.0'
 }
 ```
 
@@ -427,7 +427,9 @@ Usage:
 
 ## Support
 
-TBA
+Examples for integration with popular libraries can be found below.
+
+Koreander is currently JVM only.
 
 ### Spring
 
