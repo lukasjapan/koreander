@@ -4,10 +4,14 @@ import java.io.File
 import de.cvguy.kotlin.koreander.parser.Token.Type.*
 import org.slf4j.LoggerFactory
 
+const val BOM = 0xFEFF.toChar().toString()
+
 class Lexer {
     fun lexFile(input: File) = lexString(input.readText())
     fun lexString(input: String): List<Token> {
-        val indexedLines = input.split("\n").withIndex()
+        // remove Windows BOM (just in case) and use unix style linefeeds
+        val cleanInput = input.removePrefix(BOM).replace(Regex("(\r\n|\n|\r)"), "\n")
+        val indexedLines = cleanInput.split("\n").withIndex()
         var offset = 0
         return indexedLines.map { indexedLine ->
             LineLexer(indexedLine, offset).lexLine().also {
